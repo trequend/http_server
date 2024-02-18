@@ -8,8 +8,12 @@ add_library(
     simple_http
     STATIC
     "include/simple_http.h"
+    "lib/init_library.h"
+    "lib/init_library.cc"
     "lib/http_server.h"
     "lib/http_server.cc"
+    "lib/socket.cc"
+    "lib/socket.h"
 )
 
 target_compile_features(simple_http PUBLIC cxx_std_20)

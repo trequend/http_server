@@ -6,7 +6,11 @@ project(http_server
     VERSION 0.1.0
 )
 
-add_executable(http_server "src/main.cc")
+add_executable(
+    http_server
+    "src/main.cc"
+    "src/scope_guard.h"
+)
 
 target_compile_features(http_server PUBLIC cxx_std_20)
 
