@@ -18,43 +18,43 @@ int main() {
 
     ScopeGuard http_guard([]() { simple_http::CleanupLibrary(); });
 
-    simple_http::CreateSocketError create_socket_error;
-    std::unique_ptr<simple_http::Socket> socket =
-        simple_http::Socket::createSocket(create_socket_error);
-    if (create_socket_error != simple_http::CreateSocketError::kOk) {
-        std::cout << "Create socket error: "
-                  << static_cast<int>(create_socket_error) << std::endl;
+    simple_http::Server::CreateError create_error;
+    std::unique_ptr<simple_http::Server> server =
+        simple_http::Server::createServer(create_error);
+    if (create_error != simple_http::Server::CreateError::kOk) {
+        std::cout << "Create error: " << static_cast<int>(create_error)
+                  << std::endl;
         return EXIT_FAILURE;
     }
 
-    simple_http::BindSocketOptions bind_options;
+    simple_http::Server::BindOptions bind_options;
     bind_options.address = "127.0.0.1";  // localhost
     bind_options.port = 3000;
-    simple_http::BindSocketError bind_socket_error = socket->bind(bind_options);
-    if (bind_socket_error != simple_http::BindSocketError::kOk) {
-        std::cout << "Bind socket error: "
-                  << static_cast<int>(bind_socket_error) << std::endl;
+    simple_http::Server::BindError bind_error = server->bind(bind_options);
+    if (bind_error != simple_http::Server::BindError::kOk) {
+        std::cout << "Bind error: " << static_cast<int>(bind_error)
+                  << std::endl;
         return EXIT_FAILURE;
     }
 
-    simple_http::ListenSocketOptions listen_options;
-    listen_options.max_connections = 100;
-    simple_http::ListenSocketError listen_socket_error =
-        socket->listen(listen_options);
-    if (listen_socket_error != simple_http::ListenSocketError::kOk) {
-        std::cout << "Listen socket error: "
-                  << static_cast<int>(listen_socket_error) << std::endl;
+    simple_http::Server::ListenOptions listen_options;
+    listen_options.backlog_size = 100;
+    simple_http::Server::ListenError listen_error =
+        server->listen(listen_options);
+    if (listen_error != simple_http::Server::ListenError::kOk) {
+        std::cout << "Listen error: " << static_cast<int>(listen_error)
+                  << std::endl;
         return EXIT_FAILURE;
     }
 
     std::cout << "Listening port 3000..." << std::endl;
 
     while (true) {
-        simple_http::AcceptSocketError accept_socket_error;
-        void* client_native_socket = socket->accept(accept_socket_error);
-        if (accept_socket_error != simple_http::AcceptSocketError::kOk) {
-            std::cout << "Accept socket error: "
-                      << static_cast<int>(accept_socket_error) << std::endl;
+        simple_http::Server::AcceptError accept_error;
+        void* client_native_socket = server->accept(accept_error);
+        if (accept_error != simple_http::Server::AcceptError::kOk) {
+            std::cout << "Accept error: " << static_cast<int>(accept_error)
+                      << std::endl;
             continue;
         }
 

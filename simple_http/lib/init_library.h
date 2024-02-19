@@ -19,4 +19,6 @@ enum class CleanupLibraryError {
 };
 
 CleanupLibraryError CleanupLibrary();
+
+bool IsLibraryInitialized();
 }  // namespace simple_http

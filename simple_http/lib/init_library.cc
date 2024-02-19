@@ -4,9 +4,11 @@
 
 #include "init_library.h"
 
-#include "socket.h"
+#include <atomic>
 
-static int g_IsLibraryInitialized = false;
+#include "init_socket_library.h"
+
+static std::atomic<bool> g_IsLibraryInitialized = false;
 
 simple_http::InitLibraryError simple_http::InitLibrary() {
     using namespace simple_http;
@@ -39,3 +41,5 @@ simple_http::CleanupLibraryError simple_http::CleanupLibrary() {
     g_IsLibraryInitialized = false;
     return CleanupLibraryError::kOk;
 }
+
+bool simple_http::IsLibraryInitialized() { return g_IsLibraryInitialized; }

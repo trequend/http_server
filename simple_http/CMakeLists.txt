@@ -10,10 +10,12 @@ add_library(
     "include/simple_http.h"
     "lib/init_library.h"
     "lib/init_library.cc"
+    "lib/init_socket_library.h"
+    "lib/init_socket_library.cc"
     "lib/http_server.h"
     "lib/http_server.cc"
-    "lib/socket.cc"
-    "lib/socket.h"
+    "lib/server.cc"
+    "lib/server.h"
 )
 
 target_compile_features(simple_http PUBLIC cxx_std_20)
