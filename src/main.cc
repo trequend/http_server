@@ -2,13 +2,14 @@
 // Use of this source code is governed by a MIT License that can be
 // found in the LICENSE file.
 
+#include <simple_http.h>
 #include <winsock2.h>
 
 #include <cstring>
 #include <iostream>
+#include <memory>
 
 #include "scope_guard.h"
-#include "simple_http.h"
 
 int main() {
     simple_http::InitLibraryError error = simple_http::InitLibrary();
@@ -51,7 +52,8 @@ int main() {
 
     while (true) {
         simple_http::Server::AcceptError accept_error;
-        void* client_native_socket = server->accept(accept_error);
+        std::unique_ptr<simple_http::Socket> client_socket =
+            server->accept(accept_error);
         if (accept_error != simple_http::Server::AcceptError::kOk) {
             std::cout << "Accept error: " << static_cast<int>(accept_error)
                       << std::endl;
@@ -59,42 +61,47 @@ int main() {
         }
 
         std::cout << "Client connected" << std::endl;
-        ::SOCKET client_socket =
-            reinterpret_cast<::SOCKET>(client_native_socket);
-        ScopeGuard socket_guard([&]() {
-            ::closesocket(client_socket);
+        ScopeGuard socket_guard([&client_socket]() {
+            client_socket->close();
             std::cout << "Client socket was closed" << std::endl;
         });
 
-        unsigned long timeout = 1000;  // 1 sec
-        if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout,
-                       sizeof(timeout)) == SOCKET_ERROR) {
-            std::cout << "Setsockopt error" << std::endl;
+        std::chrono::milliseconds timeout(1000);  // 1 sec
+        auto timeout_error = client_socket->setTimeout(timeout);
+        if (timeout_error != simple_http::Socket::SetTimeoutError::kOk) {
+            std::cout << "Set timeout error" << static_cast<int>(timeout_error)
+                      << std::endl;
             continue;
         }
 
         char recv_buffer[4096];
-        int request_bytes_count =
-            ::recv(client_socket, recv_buffer, sizeof(recv_buffer), 0);
-        if (request_bytes_count == SOCKET_ERROR) {
-            int error = ::WSAGetLastError();
-            if (error == WSAETIMEDOUT) {
+        simple_http::Socket::ReadError read_error;
+        size_t request_bytes_count =
+            client_socket->read(recv_buffer, sizeof(recv_buffer), read_error);
+        if (read_error != simple_http::Socket::ReadError::kOk) {
+            if (read_error == simple_http::Socket::ReadError::kTimeout) {
                 std::cerr << "Timeout occurred while receiving data"
                           << std::endl;
             } else {
-                std::cerr << "Error receiving data: " << error << std::endl;
+                std::cerr << "Read error: " << static_cast<int>(read_error)
+                          << std::endl;
             }
 
             continue;
         }
 
-        printf("Request:\n%.*s\n", request_bytes_count, recv_buffer);
+        printf("Request:\n%.*s\n", static_cast<int>(request_bytes_count),
+               recv_buffer);
 
         const char* response =
             "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: "
             "12\r\n\r\nHello world!";
         printf("Response:\n%s\n\n", response);
-        ::send(client_socket, response, static_cast<int>(strlen(response)), 0);
+        auto send_error = client_socket->send(response, strlen(response));
+        if (send_error != simple_http::Socket::SendError::kOk) {
+            std::cout << "Send error: " << static_cast<int>(timeout_error)
+                      << std::endl;
+        }
     }
 
     return EXIT_SUCCESS;

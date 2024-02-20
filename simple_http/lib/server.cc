@@ -10,6 +10,7 @@
 #include <string>
 
 #include "init_socket_library.h"
+#include "socket.h"
 
 #ifdef _WIN32
 
@@ -103,7 +104,8 @@ simple_http::Server::ListenError simple_http::Server::listen(
     return Server::ListenError::kOk;
 }
 
-void* simple_http::Server::accept(simple_http::Server::AcceptError& error) {
+std::unique_ptr<simple_http::Socket> simple_http::Server::accept(
+    simple_http::Server::AcceptError& error) {
     using namespace simple_http;
     if (!is_binded_) {
         error = Server::AcceptError::kNotBinded;
@@ -124,7 +126,8 @@ void* simple_http::Server::accept(simple_http::Server::AcceptError& error) {
     }
 
     error = Server::AcceptError::kOk;
-    return reinterpret_cast<void*>(client_native_socket);
+    void* client_socket_descriptor = reinterpret_cast<void*>(client_native_socket);
+    return std::make_unique<Socket>(client_socket_descriptor);
 }
 
 static void* CreateNativeSocket() {

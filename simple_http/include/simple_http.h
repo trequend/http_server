@@ -7,3 +7,4 @@
 #include "../lib/http_server.h"
 #include "../lib/init_library.h"
 #include "../lib/server.h"
+#include "../lib/socket.h"

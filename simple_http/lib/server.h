@@ -9,6 +9,8 @@
 #include <memory>
 #include <string>
 
+#include "socket.h"
+
 namespace simple_http {
 class Server {
    public:
@@ -65,13 +67,13 @@ class Server {
 
     ListenError listen(const ListenOptions& options);
 
-    void* accept(AcceptError& error);
+    std::unique_ptr<Socket> accept(AcceptError& error);
 
    private:
     Server(void* socket_descriptor) : socket_descriptor_(socket_descriptor) {}
 
-    std::atomic<void*> socket_descriptor_ = nullptr;
-    std::atomic<bool> is_binded_ = false;
-    std::atomic<bool> is_listening_ = false;
+    std::atomic<void*> socket_descriptor_ = {nullptr};
+    std::atomic<bool> is_binded_ = {false};
+    std::atomic<bool> is_listening_ = {false};
 };
 }  // namespace simple_http

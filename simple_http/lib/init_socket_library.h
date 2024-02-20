@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <memory>
-
 namespace simple_http {
 enum class InitSocketLibraryError {
     kUnknown = -1,

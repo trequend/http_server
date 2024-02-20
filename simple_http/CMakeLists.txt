@@ -14,8 +14,10 @@ add_library(
     "lib/init_socket_library.cc"
     "lib/http_server.h"
     "lib/http_server.cc"
-    "lib/server.cc"
     "lib/server.h"
+    "lib/server.cc"
+    "lib/socket.h"
+    "lib/socket.cc"
 )
 
 target_compile_features(simple_http PUBLIC cxx_std_20)
