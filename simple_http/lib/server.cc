@@ -90,10 +90,10 @@ simple_http::Server::ListenError simple_http::Server::listen(
     if (connection_timeout > 0) {
         unsigned long timeout = static_cast<unsigned long>(connection_timeout);
         if (::setsockopt(native_socket, SOL_SOCKET, SO_RCVTIMEO,
-                         (const char*)&timeout,
+                         reinterpret_cast<const char*>(&timeout),
                          sizeof(timeout)) == SOCKET_ERROR ||
             ::setsockopt(native_socket, SOL_SOCKET, SO_SNDTIMEO,
-                         (const char*)&timeout,
+                         reinterpret_cast<const char*>(&timeout),
                          sizeof(timeout)) == SOCKET_ERROR) {
             return Server::ListenError::kUnknown;
         }
@@ -158,8 +158,8 @@ std::unique_ptr<simple_http::Server> simple_http::Server::createServer(
     }
 
     error = Server::CreateError::kOk;
-    Server* socket = new Server(native_socket);
-    return std::unique_ptr<Server>(socket);
+    Server* server = new Server(native_socket);
+    return std::unique_ptr<Server>(server);
 }
 
 simple_http::Server::~Server() { CloseNativeSocket(socket_descriptor_); }

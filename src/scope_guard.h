@@ -8,7 +8,7 @@
 
 class ScopeGuard {
    public:
-    ScopeGuard(std::function<void()> onExit) : on_exit_(std::move(onExit)) {}
+    ScopeGuard(std::function<void()> on_exit) : on_exit_(std::move(on_exit)) {}
 
     ~ScopeGuard() { on_exit_(); }
 
