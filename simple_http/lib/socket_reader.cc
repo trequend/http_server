@@ -32,5 +32,6 @@ simple_http::SocketReader::AdvanceError simple_http::SocketReader::advance(
     }
 
     std::copy(buffer_ + consumed_bytes, buffer_ + received_bytes_, buffer_);
+    received_bytes_ -= consumed_bytes;
     return SocketReader::AdvanceError::kOk;
 }
