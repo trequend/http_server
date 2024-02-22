@@ -85,18 +85,33 @@ int main() {
             continue;
         }
 
-        printf("Request:\n%.*s\n", static_cast<int>(request.getLength()),
-               request.getBuffer());
+        printf("Request:\n======\n%.*s\n======\n",
+               static_cast<int>(request.getLength()), request.getBuffer());
 
-        const char* response =
-            "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: "
-            "12\r\n\r\nHello world!";
-        printf("Response:\n%s\n\n", response);
-        auto send_error = client_socket->send(response, strlen(response));
-        if (send_error != simple_http::Socket::SendError::kOk) {
-            std::cout << "Send error: " << static_cast<int>(timeout_error)
-                      << std::endl;
+        char response_buffer[1024];
+        simple_http::SocketWriter writer(client_socket.get(), response_buffer,
+                                         sizeof(response_buffer));
+        const char* parts[] = {"HTTP/1.0",
+                               " 200"
+                               " OK\r\n",
+                               "Content-Type: text/html\r\n",
+                               "Content-Length: "
+                               "12\r\n\r\n",
+                               "H",
+                               "ello",
+                               " ",
+                               "wor",
+                               "ld!"};
+
+        for (size_t i = 0; i < sizeof(parts) / sizeof(char*); i++) {
+            auto write_error = writer.write(parts[i], strlen(parts[i]));
+            if (write_error != simple_http::SocketWriter::WriteError::kOk) {
+                std::cout << "Send error: " << static_cast<int>(timeout_error)
+                          << std::endl;
+            }
         }
+
+        writer.flush();
     }
 
     return EXIT_SUCCESS;

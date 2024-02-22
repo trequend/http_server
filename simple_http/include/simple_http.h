@@ -9,3 +9,4 @@
 #include "../lib/server.h"
 #include "../lib/socket.h"
 #include "../lib/socket_reader.h"
+#include "../lib/socket_writer.h"
