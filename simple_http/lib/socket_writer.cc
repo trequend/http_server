@@ -12,11 +12,10 @@ simple_http::SocketWriter::WriteError simple_http::SocketWriter::write(
         return SocketWriter::WriteError::kOutOfBounds;
     }
 
-    size_t source_offset = 0;
     do {
         size_t bytes_to_copy =
             std::min(buffer_length_ - saved_bytes_, source_buffer_length);
-        const char* source_start = source_buffer + source_offset;
+        const char* source_start = source_buffer;
         const char* source_end = source_buffer + bytes_to_copy;
         char* destination_start = buffer_ + saved_bytes_;
 
@@ -24,7 +23,7 @@ simple_http::SocketWriter::WriteError simple_http::SocketWriter::write(
 
         saved_bytes_ += bytes_to_copy;
         source_buffer_length -= bytes_to_copy;
-        source_offset += bytes_to_copy;
+        source_buffer += bytes_to_copy;
 
         if (saved_bytes_ == buffer_length_) {
             SocketWriter::FlushError flush_error = flush();
@@ -41,7 +40,7 @@ simple_http::SocketWriter::FlushError simple_http::SocketWriter::flush() {
     using namespace simple_http;
 
     if (saved_bytes_ == 0) {
-        SocketWriter::FlushError::kOk;
+        return SocketWriter::FlushError::kOk;
     }
 
     Socket::SendError send_error = socket_->send(buffer_, saved_bytes_);
