@@ -18,6 +18,8 @@ add_library(
     "lib/server.cc"
     "lib/socket.h"
     "lib/socket.cc"
+    "lib/socket_reader.h"
+    "lib/socket_reader.cc"
 )
 
 target_compile_features(simple_http PUBLIC cxx_std_20)

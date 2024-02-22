@@ -1,0 +1,50 @@
+#include "socket.h"
+
+namespace simple_http {
+class SocketReader {
+   public:
+    class ReadResult {
+       public:
+        ReadResult(){};
+
+        ReadResult(const char* buffer, size_t length, bool is_completed)
+            : buffer_(buffer), length_(length), is_completed_(is_completed){};
+
+        const char* getBuffer() const { return buffer_; };
+
+        bool isCompleted() const { return is_completed_; };
+
+        size_t getLength() const { return length_; };
+
+       private:
+        const char* buffer_ = nullptr;
+        size_t length_ = 0;
+        bool is_completed_ = false;
+    };
+
+    enum class ReadError {
+        kUnknown = -1,
+        kOk = 0,
+    };
+
+    enum class AdvanceError {
+        kOk = 0,
+        kOutOfBounds = 1,
+    };
+
+    SocketReader() = delete;
+
+    SocketReader(Socket* socket, char* buffer, size_t buffer_length)
+        : socket_(socket), buffer_(buffer), buffer_length_(buffer_length){};
+
+    ReadResult read(ReadError& error);
+
+    AdvanceError advance(size_t consumed_bytes);
+
+   private:
+    Socket* socket_ = nullptr;
+    char* buffer_ = nullptr;
+    size_t buffer_length_ = 0;
+    size_t received_bytes_ = 0;
+};
+}  // namespace simple_http

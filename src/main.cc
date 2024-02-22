@@ -75,23 +75,18 @@ int main() {
         }
 
         char recv_buffer[4096];
-        simple_http::Socket::ReadError read_error;
-        size_t request_bytes_count =
-            client_socket->read(recv_buffer, sizeof(recv_buffer), read_error);
-        if (read_error != simple_http::Socket::ReadError::kOk) {
-            if (read_error == simple_http::Socket::ReadError::kTimeout) {
-                std::cerr << "Timeout occurred while receiving data"
-                          << std::endl;
-            } else {
-                std::cerr << "Read error: " << static_cast<int>(read_error)
-                          << std::endl;
-            }
-
+        simple_http::SocketReader reader(client_socket.get(), recv_buffer,
+                                         sizeof(recv_buffer));
+        simple_http::SocketReader::ReadError read_error;
+        simple_http::SocketReader::ReadResult request = reader.read(read_error);
+        if (read_error != simple_http::SocketReader::ReadError::kOk) {
+            std::cerr << "Read error: " << static_cast<int>(read_error)
+                      << std::endl;
             continue;
         }
 
-        printf("Request:\n%.*s\n", static_cast<int>(request_bytes_count),
-               recv_buffer);
+        printf("Request:\n%.*s\n", static_cast<int>(request.getLength()),
+               request.getBuffer());
 
         const char* response =
             "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: "

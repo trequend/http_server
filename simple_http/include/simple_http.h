@@ -8,3 +8,4 @@
 #include "../lib/init_library.h"
 #include "../lib/server.h"
 #include "../lib/socket.h"
+#include "../lib/socket_reader.h"
