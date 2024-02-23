@@ -39,12 +39,16 @@ class SocketReader {
 
     ReadResult read(ReadError& error);
 
+    AdvanceError advance(size_t consumed_bytes, size_t examined_bytes);
     AdvanceError advance(size_t consumed_bytes);
 
    private:
     Socket* socket_ = nullptr;
     char* buffer_ = nullptr;
     size_t buffer_length_ = 0;
+
+    bool is_completed_ = false;
+    bool is_examined_ = true;
     size_t received_bytes_ = 0;
 };
 }  // namespace simple_http

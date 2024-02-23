@@ -8,6 +8,11 @@ simple_http::SocketReader::ReadResult simple_http::SocketReader::read(
     simple_http::SocketReader::ReadError& error) {
     using namespace simple_http;
 
+    if (!is_examined_ || is_completed_) {
+        return SocketReader::ReadResult(buffer_, received_bytes_,
+                                        is_completed_);
+    }
+
     Socket::ReadError read_error;
     size_t bytes_count =
         socket_->read(buffer_ + received_bytes_,
@@ -18,20 +23,34 @@ simple_http::SocketReader::ReadResult simple_http::SocketReader::read(
     }
 
     received_bytes_ += bytes_count;
-    bool is_completed = bytes_count == 0;
+    is_completed_ = bytes_count == 0;
     error = SocketReader::ReadError::kOk;
-    return SocketReader::ReadResult(buffer_, received_bytes_, is_completed);
+    return SocketReader::ReadResult(buffer_, received_bytes_, is_completed_);
 }
 
 simple_http::SocketReader::AdvanceError simple_http::SocketReader::advance(
     size_t consumed_bytes) {
+    return advance(consumed_bytes, consumed_bytes);
+}
+
+simple_http::SocketReader::AdvanceError simple_http::SocketReader::advance(
+    size_t consumed_bytes, size_t examined_bytes) {
     using namespace simple_http;
 
     if (consumed_bytes < 0 || consumed_bytes > received_bytes_) {
         return SocketReader::AdvanceError::kOutOfBounds;
     }
 
+    if (examined_bytes < 0 || examined_bytes > received_bytes_) {
+        return SocketReader::AdvanceError::kOutOfBounds;
+    }
+
+    if (consumed_bytes > examined_bytes) {
+        return SocketReader::AdvanceError::kOutOfBounds;
+    }
+
     std::copy(buffer_ + consumed_bytes, buffer_ + received_bytes_, buffer_);
     received_bytes_ -= consumed_bytes;
+    is_examined_ = examined_bytes == received_bytes_;
     return SocketReader::AdvanceError::kOk;
 }
