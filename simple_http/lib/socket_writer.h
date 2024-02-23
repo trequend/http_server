@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "socket.h"
 
 namespace simple_http {
@@ -25,6 +27,7 @@ class SocketWriter {
     SocketWriter(Socket* socket, char* buffer, size_t buffer_length)
         : socket_(socket), buffer_(buffer), buffer_length_(buffer_length){};
 
+    WriteError write(const std::string& value);
     WriteError write(const char* source_buffer, size_t source_buffer_length);
 
     FlushError flush();

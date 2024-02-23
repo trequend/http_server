@@ -130,30 +130,28 @@ int main() {
             auto header_values = headers_it->second;
             for (auto header_it = header_values.begin();
                  header_it != header_values.end(); header_it++) {
-                auto write_error = writer.write(headers_it->first.c_str(),
-                                                headers_it->first.length());
+                auto write_error = writer.write(headers_it->first);
                 if (write_error != simple_http::SocketWriter::WriteError::kOk) {
                     std::cout
                         << "Send error: " << static_cast<int>(timeout_error)
                         << std::endl;
                 }
 
-                write_error = writer.write(": ", 2);
+                write_error = writer.write(": ");
                 if (write_error != simple_http::SocketWriter::WriteError::kOk) {
                     std::cout
                         << "Send error: " << static_cast<int>(timeout_error)
                         << std::endl;
                 }
 
-                write_error =
-                    writer.write(header_it->c_str(), header_it->length());
+                write_error = writer.write(*header_it);
                 if (write_error != simple_http::SocketWriter::WriteError::kOk) {
                     std::cout
                         << "Send error: " << static_cast<int>(timeout_error)
                         << std::endl;
                 }
 
-                write_error = writer.write("\r\n", 2);
+                write_error = writer.write("\r\n");
                 if (write_error != simple_http::SocketWriter::WriteError::kOk) {
                     std::cout
                         << "Send error: " << static_cast<int>(timeout_error)
@@ -162,13 +160,13 @@ int main() {
             }
         }
 
-        auto write_error = writer.write("\r\n", 2);
+        auto write_error = writer.write("\r\n");
         if (write_error != simple_http::SocketWriter::WriteError::kOk) {
             std::cout << "Send error: " << static_cast<int>(timeout_error)
                       << std::endl;
         }
 
-        write_error = writer.write(body.c_str(), body.length());
+        write_error = writer.write(body);
         if (write_error != simple_http::SocketWriter::WriteError::kOk) {
             std::cout << "Send error: " << static_cast<int>(timeout_error)
                       << std::endl;

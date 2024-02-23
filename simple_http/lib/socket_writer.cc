@@ -5,8 +5,14 @@
 #include "socket_writer.h"
 
 #include <algorithm>
+#include <string>
 
 #include "socket.h"
+
+simple_http::SocketWriter::WriteError simple_http::SocketWriter::write(
+    const std::string& value) {
+    return write(value.c_str(), value.length());
+}
 
 simple_http::SocketWriter::WriteError simple_http::SocketWriter::write(
     const char* source_buffer, size_t source_buffer_length) {
