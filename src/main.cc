@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "scope_guard.h"
+#include "utils.h"
 
 int main() {
     simple_http::InitLibraryError error = simple_http::InitLibrary();
@@ -47,6 +48,16 @@ int main() {
                   << std::endl;
         return EXIT_FAILURE;
     }
+
+    simple_http::HttpHeaders test_headers;
+    test_headers.add("Content-Length", "126");
+    test_headers.add("Content-Type", "text/html");
+    test_headers.add("X-Powered-By", "simple_http");
+    test_headers.add("Set-Cookie", "hello=world!");
+    test_headers.add("Set-Cookie", "session_data=data");
+    std::cout << "=== Headers ===" << std::endl;
+    PrintHeaders(test_headers);
+    std::cout << "===============" << std::endl << std::endl;
 
     std::cout << "Listening port 3000..." << std::endl;
 
@@ -91,24 +102,76 @@ int main() {
         char response_buffer[1024];
         simple_http::SocketWriter writer(client_socket.get(), response_buffer,
                                          sizeof(response_buffer));
-        const char* parts[] = {"HTTP/1.0",
-                               " 200"
-                               " OK\r\n",
-                               "Content-Type: text/html\r\n",
-                               "Content-Length: "
-                               "12\r\n\r\n",
-                               "H",
-                               "ello",
-                               " ",
-                               "wor",
-                               "ld!"};
-
-        for (size_t i = 0; i < sizeof(parts) / sizeof(char*); i++) {
-            auto write_error = writer.write(parts[i], strlen(parts[i]));
+        const char* http_line_parts[] = {"HTTP/1.0",
+                                         " 200"
+                                         " OK\r\n"};
+        for (size_t i = 0; i < sizeof(http_line_parts) / sizeof(char*); i++) {
+            auto write_error =
+                writer.write(http_line_parts[i], strlen(http_line_parts[i]));
             if (write_error != simple_http::SocketWriter::WriteError::kOk) {
                 std::cout << "Send error: " << static_cast<int>(timeout_error)
                           << std::endl;
             }
+        }
+
+        std::string body =
+            "<!DOCTYPE html><html lang=\"en\"><head><meta "
+            "charset=\"UTF-8\"><meta name=\"viewport\" "
+            "content=\"width=device-width,initial-scale=1\"><title>Simple "
+            "Http</title></head><body><h1>Hello World!</h1></body></html>";
+
+        simple_http::HttpHeaders headers;
+        headers.add("Content-Length", std::to_string(body.length()));
+        headers.add("Content-Type", "text/html");
+        headers.add("X-Powered-By", "simple_http");
+
+        for (auto headers_it = headers.begin(); headers_it != headers.end();
+             headers_it++) {
+            auto header_values = headers_it->second;
+            for (auto header_it = header_values.begin();
+                 header_it != header_values.end(); header_it++) {
+                auto write_error = writer.write(headers_it->first.c_str(),
+                                                headers_it->first.length());
+                if (write_error != simple_http::SocketWriter::WriteError::kOk) {
+                    std::cout
+                        << "Send error: " << static_cast<int>(timeout_error)
+                        << std::endl;
+                }
+
+                write_error = writer.write(": ", 2);
+                if (write_error != simple_http::SocketWriter::WriteError::kOk) {
+                    std::cout
+                        << "Send error: " << static_cast<int>(timeout_error)
+                        << std::endl;
+                }
+
+                write_error =
+                    writer.write(header_it->c_str(), header_it->length());
+                if (write_error != simple_http::SocketWriter::WriteError::kOk) {
+                    std::cout
+                        << "Send error: " << static_cast<int>(timeout_error)
+                        << std::endl;
+                }
+
+                write_error = writer.write("\r\n", 2);
+                if (write_error != simple_http::SocketWriter::WriteError::kOk) {
+                    std::cout
+                        << "Send error: " << static_cast<int>(timeout_error)
+                        << std::endl;
+                }
+            }
+        }
+
+        auto write_error = writer.write("\r\n", 2);
+        if (write_error != simple_http::SocketWriter::WriteError::kOk) {
+            std::cout << "Send error: " << static_cast<int>(timeout_error)
+                      << std::endl;
+        }
+
+        write_error = writer.write(body.c_str(), body.length());
+        if (write_error != simple_http::SocketWriter::WriteError::kOk) {
+            std::cout << "Send error: " << static_cast<int>(timeout_error)
+                      << std::endl;
         }
 
         writer.flush();

@@ -10,6 +10,8 @@ add_executable(
     http_server
     "src/main.cc"
     "src/scope_guard.h"
+    "src/utils.h"
+    "src/utils.cc"
 )
 
 target_compile_features(http_server PUBLIC cxx_std_20)
