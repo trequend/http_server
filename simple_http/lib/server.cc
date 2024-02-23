@@ -1,4 +1,4 @@
-// Copyright 2024 Balakin Dmitry. All rights reserved.
+// Copyright 2024 Dmitrii Balakin. All rights reserved.
 // Use of this source code is governed by a MIT License that can be
 // found in the LICENSE file.
 
@@ -126,7 +126,8 @@ std::unique_ptr<simple_http::Socket> simple_http::Server::accept(
     }
 
     error = Server::AcceptError::kOk;
-    void* client_socket_descriptor = reinterpret_cast<void*>(client_native_socket);
+    void* client_socket_descriptor =
+        reinterpret_cast<void*>(client_native_socket);
     return std::make_unique<Socket>(client_socket_descriptor);
 }
 
