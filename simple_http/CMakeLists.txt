@@ -24,6 +24,14 @@ add_library(
     "lib/socket_writer.cc"
     "lib/http_headers.h"
     "lib/http_headers.cc"
+    "lib/base_parser.cc"
+    "lib/base_parser.h"
+    "lib/http_parser.h"
+    "lib/http_parser.cc"
+    "lib/http_uri_parser.h"
+    "lib/http_uri_parser.cc"
+    "lib/http_version.h"
+    "lib/http_method.h"
 )
 
 target_compile_features(simple_http PUBLIC cxx_std_20)

@@ -67,6 +67,11 @@
         "xhash": "cpp",
         "xtree": "cpp",
         "map": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "regex": "cpp",
+        "set": "cpp",
+        "array": "cpp",
+        "string_view": "cpp",
+        "unordered_set": "cpp"
     }
 }

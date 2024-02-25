@@ -61,6 +61,36 @@ int main() {
     PrintHeaders(test_headers);
     std::cout << "===============" << std::endl << std::endl;
 
+    std::cout << "=== Parsers ===" << std::endl;
+
+    std::string request_line =
+        "GET      http://localhost:3000/hey%2f/how;are;you?world=hello "
+        "HTTP/1.0";
+    std::cout << "Request line: \"" << request_line << "\"" << std::endl;
+    simple_http::HttpParser parser;
+    simple_http::HttpParser::ParseRequestLineError parse_request_line_error;
+    auto request_line_parse_result =
+        parser.parseRequestLine(request_line, parse_request_line_error);
+    PrintRequestLineParserResult(request_line_parse_result);
+
+    if (request_line_parse_result.has_value()) {
+        auto uri = request_line_parse_result.value().uri;
+        simple_http::HttpUriParser uri_parser;
+        auto uri_parse_result = uri_parser.parseUri(uri);
+        PrintRequestUriParserResult(uri_parse_result);
+    }
+
+    std::cout << std::endl;
+
+    std::string header_line = "Content-Length: 22";
+    std::cout << "Header line: \"" << header_line << "\"" << std::endl;
+    simple_http::HttpParser::ParseRequestHeaderError parse_header_error;
+    auto request_header_parse_result =
+        parser.parseRequestHeader(header_line, parse_header_error);
+    PrintRequestHeaderParserResult(request_header_parse_result);
+
+    std::cout << "===============" << std::endl << std::endl;
+
     std::cout << "Listening port 3000..." << std::endl;
 
     while (true) {
