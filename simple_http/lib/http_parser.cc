@@ -111,6 +111,7 @@ std::optional<HttpParser::RequestHeader> HttpParser::parseRequestHeader(
         return std::nullopt;
     }
 
+    error = ParseRequestHeaderError::kOk;
     RequestHeader header;
     header.name = header_name.value();
     header.value = header_value.value();

@@ -6,6 +6,6 @@
 
 namespace simple_http {
 
-enum class HttpMethod { kGet, kHead, kPost, kCustom };
+enum class HttpMethod { kNone = -1, kGet, kHead, kPost, kCustom };
 
 }  // namespace simple_http

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "../lib/http_connection.h"
 #include "../lib/http_headers.h"
 #include "../lib/http_parser.h"
 #include "../lib/http_server.h"

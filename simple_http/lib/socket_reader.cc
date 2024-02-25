@@ -21,6 +21,7 @@ SocketReader::ReadResult SocketReader::read(SocketReader::ReadError& error) {
         socket_->read(buffer_ + received_bytes_,
                       buffer_length_ - received_bytes_, read_error);
     if (read_error != Socket::ReadError::kOk) {
+        socket_->close();
         error = SocketReader::ReadError::kUnknown;
         return SocketReader::ReadResult();
     }

@@ -52,6 +52,7 @@ SocketWriter::FlushError SocketWriter::flush() {
 
     Socket::SendError send_error = socket_->send(buffer_, saved_bytes_);
     if (send_error != Socket::SendError::kOk) {
+        socket_->close();
         return SocketWriter::FlushError::kUnknown;
     }
 

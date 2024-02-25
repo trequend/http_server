@@ -6,6 +6,6 @@
 
 namespace simple_http {
 
-enum class HttpVersion { kHttp09, kHttp10 };
+enum class HttpVersion { kNone = -1, kHttp09, kHttp10, kHttp11 };
 
 }  // namespace simple_http

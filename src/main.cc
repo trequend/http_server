@@ -120,107 +120,145 @@ int main() {
         char recv_buffer[4096];
         simple_http::SocketReader reader(client_socket.get(), recv_buffer,
                                          sizeof(recv_buffer));
-        simple_http::SocketReader::ReadError read_error;
-        simple_http::SocketReader::ReadResult request = reader.read(read_error);
-        if (read_error != simple_http::SocketReader::ReadError::kOk) {
-            std::cerr << "Read error: " << static_cast<int>(read_error)
-                      << std::endl;
-            continue;
-        }
-
-        printf("Request:\n======\n%.*s\n======\n",
-               static_cast<int>(request.getLength()), request.getBuffer());
 
         char response_buffer[1024];
         simple_http::SocketWriter writer(client_socket.get(), response_buffer,
                                          sizeof(response_buffer));
-        const char* http_line_parts[] = {"HTTP/1.0",
-                                         " 200"
-                                         " OK\r\n"};
-        for (size_t i = 0; i < sizeof(http_line_parts) / sizeof(char*); i++) {
-            auto write_error =
-                writer.write(http_line_parts[i], strlen(http_line_parts[i]));
+
+        simple_http::HttpConnection connection(client_socket.get(), reader,
+                                               writer);
+        connection.proccessRequest([&]() {
+            const char* http_ok_line_parts[] = {"HTTP/1.0",
+                                                " 200"
+                                                " OK\r\n"};
+            const char* http_not_found_line_parts[] = {"HTTP/1.0",
+                                                       " 404"
+                                                       " Not Found\r\n"};
+            if (connection.path_ == "/") {
+                for (size_t i = 0;
+                     i < sizeof(http_ok_line_parts) / sizeof(char*); i++) {
+                    auto write_error = writer.write(
+                        http_ok_line_parts[i], strlen(http_ok_line_parts[i]));
+                    if (write_error !=
+                        simple_http::SocketWriter::WriteError::kOk) {
+                        std::cout
+                            << "Send error: " << static_cast<int>(write_error)
+                            << std::endl;
+                    }
+                }
+            } else {
+                for (size_t i = 0;
+                     i < sizeof(http_not_found_line_parts) / sizeof(char*);
+                     i++) {
+                    auto write_error =
+                        writer.write(http_not_found_line_parts[i],
+                                     strlen(http_not_found_line_parts[i]));
+                    if (write_error !=
+                        simple_http::SocketWriter::WriteError::kOk) {
+                        std::cout
+                            << "Send error: " << static_cast<int>(write_error)
+                            << std::endl;
+                    }
+                }
+            }
+
+            std::cout << "=== Connection ===" << std::endl;
+            std::cout << "Method: \"" << connection.method_name_ << "\""
+                      << std::endl;
+            std::cout << "Uri: \"" << connection.uri_ << "\"" << std::endl;
+            std::cout << "Path: \"" << connection.path_ << "\"" << std::endl;
+            std::cout << "Query: \"" << connection.query_ << "\"" << std::endl;
+            std::cout << "Headers:" << std::endl;
+            PrintHeaders(connection.request_headers_);
+            std::cout << "==================" << std::endl;
+
+            std::string file_name =
+                connection.path_ == "/" ? "www/index.html" : "www/_404.html";
+            std::ifstream file(file_name, std::ios::binary);
+
+            if (!file.is_open()) {
+                std::cout << "File opening error" << std::endl;
+                return;
+            }
+
+            file.seekg(0, std::ios::end);
+            std::streampos end_postion = file.tellg();
+            size_t file_size = static_cast<size_t>(end_postion);
+            file.seekg(0, std::ios::beg);
+
+            simple_http::HttpHeaders headers;
+            headers.add("Content-Length", std::to_string(file_size));
+            headers.add("Content-Type", "text/html; charset=UTF-8");
+            headers.add("X-Powered-By", "simple_http");
+
+            for (auto headers_it = headers.begin(); headers_it != headers.end();
+                 headers_it++) {
+                auto header_values = headers_it->second;
+                for (auto header_it = header_values.begin();
+                     header_it != header_values.end(); header_it++) {
+                    auto write_error = writer.write(headers_it->first);
+                    if (write_error !=
+                        simple_http::SocketWriter::WriteError::kOk) {
+                        std::cout
+                            << "Send error: " << static_cast<int>(write_error)
+                            << std::endl;
+                    }
+
+                    write_error = writer.write(": ");
+                    if (write_error !=
+                        simple_http::SocketWriter::WriteError::kOk) {
+                        std::cout
+                            << "Send error: " << static_cast<int>(write_error)
+                            << std::endl;
+                    }
+
+                    write_error = writer.write(*header_it);
+                    if (write_error !=
+                        simple_http::SocketWriter::WriteError::kOk) {
+                        std::cout
+                            << "Send error: " << static_cast<int>(write_error)
+                            << std::endl;
+                    }
+
+                    write_error = writer.write("\r\n");
+                    if (write_error !=
+                        simple_http::SocketWriter::WriteError::kOk) {
+                        std::cout
+                            << "Send error: " << static_cast<int>(write_error)
+                            << std::endl;
+                    }
+                }
+            }
+
+            auto write_error = writer.write("\r\n");
             if (write_error != simple_http::SocketWriter::WriteError::kOk) {
                 std::cout << "Send error: " << static_cast<int>(write_error)
                           << std::endl;
             }
-        }
 
-        std::string file_name = "www/index.html";
-        std::ifstream file(file_name, std::ios::binary);
-
-        if (!file.is_open()) {
-            std::cout << "File opening error" << std::endl;
-            continue;
-        }
-
-        file.seekg(0, std::ios::end);
-        std::streampos end_postion = file.tellg();
-        size_t file_size = static_cast<size_t>(end_postion);
-        file.seekg(0, std::ios::beg);
-
-        simple_http::HttpHeaders headers;
-        headers.add("Content-Length", std::to_string(file_size));
-        headers.add("Content-Type", "text/html; charset=UTF-8");
-        headers.add("X-Powered-By", "simple_http");
-
-        for (auto headers_it = headers.begin(); headers_it != headers.end();
-             headers_it++) {
-            auto header_values = headers_it->second;
-            for (auto header_it = header_values.begin();
-                 header_it != header_values.end(); header_it++) {
-                auto write_error = writer.write(headers_it->first);
-                if (write_error != simple_http::SocketWriter::WriteError::kOk) {
-                    std::cout << "Send error: " << static_cast<int>(write_error)
-                              << std::endl;
-                }
-
-                write_error = writer.write(": ");
-                if (write_error != simple_http::SocketWriter::WriteError::kOk) {
-                    std::cout << "Send error: " << static_cast<int>(write_error)
-                              << std::endl;
-                }
-
-                write_error = writer.write(*header_it);
-                if (write_error != simple_http::SocketWriter::WriteError::kOk) {
-                    std::cout << "Send error: " << static_cast<int>(write_error)
-                              << std::endl;
-                }
-
-                write_error = writer.write("\r\n");
-                if (write_error != simple_http::SocketWriter::WriteError::kOk) {
-                    std::cout << "Send error: " << static_cast<int>(write_error)
-                              << std::endl;
+            char read_buffer[1024];
+            while (file.good()) {
+                file.read(read_buffer, sizeof(read_buffer));
+                size_t bytes_readed = file.gcount();
+                if (bytes_readed > 0) {
+                    write_error = writer.write(read_buffer, bytes_readed);
+                    if (write_error !=
+                        simple_http::SocketWriter::WriteError::kOk) {
+                        std::cout
+                            << "Send error: " << static_cast<int>(write_error)
+                            << std::endl;
+                    }
                 }
             }
-        }
 
-        auto write_error = writer.write("\r\n");
-        if (write_error != simple_http::SocketWriter::WriteError::kOk) {
-            std::cout << "Send error: " << static_cast<int>(write_error)
-                      << std::endl;
-        }
-
-        char read_buffer[1024];
-        while (file.good()) {
-            file.read(read_buffer, sizeof(read_buffer));
-            size_t bytes_readed = file.gcount();
-            if (bytes_readed > 0) {
-                write_error = writer.write(read_buffer, bytes_readed);
-                if (write_error != simple_http::SocketWriter::WriteError::kOk) {
-                    std::cout << "Send error: " << static_cast<int>(write_error)
-                              << std::endl;
-                }
+            if (file.bad() || !file.eof()) {
+                std::cout << "File reading error" << std::endl;
             }
-        }
 
-        if (file.bad() || !file.eof()) {
-            std::cout << "File reading error" << std::endl;
-        }
+            file.close();
 
-        file.close();
-
-        writer.flush();
+            writer.flush();
+        });
     }
 
     return EXIT_SUCCESS;
