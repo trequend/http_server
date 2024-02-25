@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace simple_http {
+
 class HttpHeaders {
    public:
     void add(const std::string& name, const std::string& value);
@@ -33,4 +34,5 @@ class HttpHeaders {
    private:
     std::map<std::string, std::vector<std::string>> headers_;
 };
+
 };  // namespace simple_http

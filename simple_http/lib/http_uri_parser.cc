@@ -1,10 +1,16 @@
+// Copyright 2024 Dmitrii Balakin. All rights reserved.
+// Use of this source code is governed by a MIT License that can be
+// found in the LICENSE file.
+
 #include "http_uri_parser.h"
 
 #include <charconv>
+#include <optional>
 #include <string_view>
 #include <unordered_set>
 
 namespace simple_http {
+
 static const std::unordered_set<char> kSubDelims{'!', '$', '&', '\'', '(', ')',
                                                  '*', '+', ',', ';',  '='};
 
@@ -337,4 +343,5 @@ bool HttpUriParser::parseEncodedSymbol(const std::string_view& line,
     state.index += 2;
     return true;
 }
+
 }  // namespace simple_http

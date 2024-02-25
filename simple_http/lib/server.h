@@ -12,6 +12,7 @@
 #include "socket.h"
 
 namespace simple_http {
+
 class Server {
    public:
     enum class CreateError {
@@ -76,4 +77,5 @@ class Server {
     std::atomic<bool> is_binded_ = {false};
     std::atomic<bool> is_listening_ = {false};
 };
+
 }  // namespace simple_http

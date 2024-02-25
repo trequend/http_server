@@ -8,10 +8,9 @@
 
 #include "socket.h"
 
-simple_http::SocketReader::ReadResult simple_http::SocketReader::read(
-    simple_http::SocketReader::ReadError& error) {
-    using namespace simple_http;
+namespace simple_http {
 
+SocketReader::ReadResult SocketReader::read(SocketReader::ReadError& error) {
     if (!is_examined_ || is_completed_) {
         return SocketReader::ReadResult(buffer_, received_bytes_,
                                         is_completed_);
@@ -32,15 +31,12 @@ simple_http::SocketReader::ReadResult simple_http::SocketReader::read(
     return SocketReader::ReadResult(buffer_, received_bytes_, is_completed_);
 }
 
-simple_http::SocketReader::AdvanceError simple_http::SocketReader::advance(
-    size_t consumed_bytes) {
+SocketReader::AdvanceError SocketReader::advance(size_t consumed_bytes) {
     return advance(consumed_bytes, consumed_bytes);
 }
 
-simple_http::SocketReader::AdvanceError simple_http::SocketReader::advance(
-    size_t consumed_bytes, size_t examined_bytes) {
-    using namespace simple_http;
-
+SocketReader::AdvanceError SocketReader::advance(size_t consumed_bytes,
+                                                 size_t examined_bytes) {
     if (consumed_bytes < 0 || consumed_bytes > received_bytes_) {
         return SocketReader::AdvanceError::kOutOfBounds;
     }
@@ -58,3 +54,5 @@ simple_http::SocketReader::AdvanceError simple_http::SocketReader::advance(
     is_examined_ = examined_bytes == received_bytes_;
     return SocketReader::AdvanceError::kOk;
 }
+
+}  // namespace simple_http

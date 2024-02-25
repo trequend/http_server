@@ -1,6 +1,10 @@
+// Copyright 2024 Dmitrii Balakin. All rights reserved.
+// Use of this source code is governed by a MIT License that can be
+// found in the LICENSE file.
+
 #include "http_parser.h"
 
-#include <string>
+#include <optional>
 #include <string_view>
 #include <unordered_set>
 

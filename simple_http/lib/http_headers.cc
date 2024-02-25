@@ -11,8 +11,9 @@
 #include <utility>
 #include <vector>
 
-void simple_http::HttpHeaders::add(const std::string& name,
-                                   const std::string& value) {
+namespace simple_http {
+
+void HttpHeaders::add(const std::string& name, const std::string& value) {
     std::string normilized_name = name;
     std::transform(normilized_name.begin(), normilized_name.end(),
                    normilized_name.begin(), ::tolower);
@@ -26,7 +27,7 @@ void simple_http::HttpHeaders::add(const std::string& name,
     headers_.insert({normilized_name, {value}});
 }
 
-void simple_http::HttpHeaders::add(std::string&& name, std::string&& value) {
+void HttpHeaders::add(std::string&& name, std::string&& value) {
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
     auto it = headers_.find(name);
@@ -38,7 +39,7 @@ void simple_http::HttpHeaders::add(std::string&& name, std::string&& value) {
     headers_.insert({std::move(name), {std::move(value)}});
 }
 
-std::optional<std::vector<std::string>> simple_http::HttpHeaders::get(
+std::optional<std::vector<std::string>> HttpHeaders::get(
     const std::string& name) const {
     auto it = headers_.find(name);
     if (it != headers_.end()) {
@@ -47,3 +48,5 @@ std::optional<std::vector<std::string>> simple_http::HttpHeaders::get(
 
     return std::nullopt;
 }
+
+}  // namespace simple_http

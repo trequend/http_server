@@ -9,6 +9,7 @@
 #include "socket.h"
 
 namespace simple_http {
+
 class SocketWriter {
    public:
     enum class WriteError {
@@ -38,4 +39,5 @@ class SocketWriter {
     size_t buffer_length_ = 0;
     size_t saved_bytes_ = 0;
 };
+
 }  // namespace simple_http

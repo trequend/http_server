@@ -5,5 +5,7 @@
 #pragma once
 
 namespace simple_http {
+
 enum class HttpMethod { kGet, kHead, kPost, kCustom };
+
 }  // namespace simple_http

@@ -8,11 +8,11 @@
 
 #include "init_socket_library.h"
 
+namespace simple_http {
+
 static std::atomic<bool> g_IsLibraryInitialized = false;
 
-simple_http::InitLibraryError simple_http::InitLibrary() {
-    using namespace simple_http;
-
+InitLibraryError InitLibrary() {
     if (g_IsLibraryInitialized) {
         return InitLibraryError::kAlreadyInitialzed;
     }
@@ -26,9 +26,7 @@ simple_http::InitLibraryError simple_http::InitLibrary() {
     return InitLibraryError::kOk;
 }
 
-simple_http::CleanupLibraryError simple_http::CleanupLibrary() {
-    using namespace simple_http;
-
+CleanupLibraryError CleanupLibrary() {
     if (!g_IsLibraryInitialized) {
         return CleanupLibraryError::kOk;
     }
@@ -42,4 +40,6 @@ simple_http::CleanupLibraryError simple_http::CleanupLibrary() {
     return CleanupLibraryError::kOk;
 }
 
-bool simple_http::IsLibraryInitialized() { return g_IsLibraryInitialized; }
+bool IsLibraryInitialized() { return g_IsLibraryInitialized; }
+
+}  // namespace simple_http

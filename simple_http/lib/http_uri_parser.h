@@ -10,6 +10,7 @@
 #include "base_parser.h"
 
 namespace simple_http {
+
 class HttpUriParser : private BaseParser {
    public:
     struct UriParts {
@@ -47,4 +48,5 @@ class HttpUriParser : private BaseParser {
 
     bool parseEncodedSymbol(const std::string_view& line, State& state);
 };
+
 }  // namespace simple_http

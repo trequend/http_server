@@ -5,5 +5,7 @@
 #pragma once
 
 namespace simple_http {
+
 enum class HttpVersion { kHttp09, kHttp10 };
+
 }  // namespace simple_http

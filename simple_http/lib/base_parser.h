@@ -7,6 +7,7 @@
 #include <string_view>
 
 namespace simple_http {
+
 class BaseParser {
    protected:
     struct State {
@@ -19,4 +20,5 @@ class BaseParser {
     bool parseLiteral(const std::string_view& literal,
                       const std::string_view& line, State& state);
 };
+
 }  // namespace simple_http

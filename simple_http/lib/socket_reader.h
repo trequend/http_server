@@ -7,6 +7,7 @@
 #include "socket.h"
 
 namespace simple_http {
+
 class SocketReader {
    public:
     class ReadResult {
@@ -57,4 +58,5 @@ class SocketReader {
     bool is_examined_ = true;
     size_t received_bytes_ = 0;
 };
+
 }  // namespace simple_http

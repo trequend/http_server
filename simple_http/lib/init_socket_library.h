@@ -5,6 +5,7 @@
 #pragma once
 
 namespace simple_http {
+
 enum class InitSocketLibraryError {
     kUnknown = -1,
     kOk = 0,
@@ -21,4 +22,5 @@ enum class CleanupSocketLibraryError {
 CleanupSocketLibraryError CleanupSocketLibrary();
 
 bool IsSocketLibraryInitialized();
+
 }  // namespace simple_http

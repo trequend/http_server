@@ -17,10 +17,13 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-simple_http::Server::BindError simple_http::Server::bind(
-    const simple_http::Server::BindOptions& options) {
-    using namespace simple_http;
+#endif
 
+namespace simple_http {
+
+#ifdef _WIN32
+
+Server::BindError Server::bind(const Server::BindOptions& options) {
     if (is_binded_) {
         return Server::BindError::kAlreadyBinded;
     }
@@ -60,10 +63,7 @@ simple_http::Server::BindError simple_http::Server::bind(
     return Server::BindError::kOk;
 }
 
-simple_http::Server::ListenError simple_http::Server::listen(
-    const simple_http::Server::ListenOptions& options) {
-    using namespace simple_http;
-
+Server::ListenError Server::listen(const Server::ListenOptions& options) {
     if (is_listening_) {
         return Server::ListenError::kAlreadyListening;
     }
@@ -104,9 +104,7 @@ simple_http::Server::ListenError simple_http::Server::listen(
     return Server::ListenError::kOk;
 }
 
-std::unique_ptr<simple_http::Socket> simple_http::Server::accept(
-    simple_http::Server::AcceptError& error) {
-    using namespace simple_http;
+std::unique_ptr<Socket> Server::accept(Server::AcceptError& error) {
     if (!is_binded_) {
         error = Server::AcceptError::kNotBinded;
         return nullptr;
@@ -146,10 +144,7 @@ static void CloseNativeSocket(void* native_socket) {
 
 #endif
 
-std::unique_ptr<simple_http::Server> simple_http::Server::createServer(
-    simple_http::Server::CreateError& error) {
-    using namespace simple_http;
-
+std::unique_ptr<Server> Server::createServer(Server::CreateError& error) {
     if (!IsSocketLibraryInitialized()) {
         error = Server::CreateError::kLibraryNotInitialized;
         return nullptr;
@@ -166,4 +161,6 @@ std::unique_ptr<simple_http::Server> simple_http::Server::createServer(
     return std::unique_ptr<Server>(server);
 }
 
-simple_http::Server::~Server() { CloseNativeSocket(socket_descriptor_); }
+Server::~Server() { CloseNativeSocket(socket_descriptor_); }
+
+}  // namespace simple_http

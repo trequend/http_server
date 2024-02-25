@@ -7,6 +7,7 @@
 #include <chrono>
 
 namespace simple_http {
+
 class Socket {
    public:
     enum class ReadError {
@@ -38,7 +39,7 @@ class Socket {
     Socket() = delete;
     Socket(void* socket_descriptor) : socket_descriptor_(socket_descriptor) {}
 
-    ~Socket();
+    ~Socket() { close(); }
 
     size_t read(char* buffer, size_t buffer_length, ReadError& error);
 
@@ -52,4 +53,5 @@ class Socket {
     void* socket_descriptor_ = nullptr;
     bool is_closed_ = false;
 };
+
 }  // namespace simple_http

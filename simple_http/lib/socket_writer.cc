@@ -9,15 +9,14 @@
 
 #include "socket.h"
 
-simple_http::SocketWriter::WriteError simple_http::SocketWriter::write(
-    const std::string& value) {
+namespace simple_http {
+
+SocketWriter::WriteError SocketWriter::write(const std::string& value) {
     return write(value.c_str(), value.length());
 }
 
-simple_http::SocketWriter::WriteError simple_http::SocketWriter::write(
-    const char* source_buffer, size_t source_buffer_length) {
-    using namespace simple_http;
-
+SocketWriter::WriteError SocketWriter::write(const char* source_buffer,
+                                             size_t source_buffer_length) {
     if (source_buffer_length < 0) {
         return SocketWriter::WriteError::kOutOfBounds;
     }
@@ -46,9 +45,7 @@ simple_http::SocketWriter::WriteError simple_http::SocketWriter::write(
     return SocketWriter::WriteError::kOk;
 }
 
-simple_http::SocketWriter::FlushError simple_http::SocketWriter::flush() {
-    using namespace simple_http;
-
+SocketWriter::FlushError SocketWriter::flush() {
     if (saved_bytes_ == 0) {
         return SocketWriter::FlushError::kOk;
     }
@@ -61,3 +58,5 @@ simple_http::SocketWriter::FlushError simple_http::SocketWriter::flush() {
     saved_bytes_ = 0;
     return SocketWriter::FlushError::kOk;
 }
+
+}  // namespace simple_http

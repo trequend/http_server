@@ -5,12 +5,12 @@
 #pragma once
 
 #include <optional>
-#include <string>
 #include <string_view>
 
 #include "base_parser.h"
 
 namespace simple_http {
+
 class HttpParser : private BaseParser {
    public:
     struct RequestVersion {
@@ -76,4 +76,5 @@ class HttpParser : private BaseParser {
 
     void skipWhiteSpaces(const std::string_view& line, State& state);
 };
+
 }  // namespace simple_http

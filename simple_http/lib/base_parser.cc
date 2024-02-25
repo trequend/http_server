@@ -1,9 +1,14 @@
+// Copyright 2024 Dmitrii Balakin. All rights reserved.
+// Use of this source code is governed by a MIT License that can be
+// found in the LICENSE file.
+
 #include "base_parser.h"
 
 #include <cctype>
 #include <string_view>
 
 namespace simple_http {
+
 bool BaseParser::parseSymbol(char symbol, const std::string_view& line,
                              State& state) {
     std::string_view literal(&symbol, 1);
@@ -31,4 +36,5 @@ bool BaseParser::parseLiteral(const std::string_view& literal,
 
     return true;
 }
+
 }  // namespace simple_http

@@ -6,6 +6,8 @@
 
 #include <iostream>
 
-void simple_http::HttpServer::sayHello() {
-    std::cout << "Hello world!" << std::endl;
-}
+namespace simple_http {
+
+void HttpServer::sayHello() { std::cout << "Hello world!" << std::endl; }
+
+}  // namespace simple_http

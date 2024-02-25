@@ -10,12 +10,14 @@
 
 #include <winsock2.h>
 
-simple_http::Socket::~Socket() { close(); }
+#endif
 
-size_t simple_http::Socket::read(char* buffer, size_t buffer_length,
-                                 simple_http::Socket::ReadError& error) {
-    using namespace simple_http;
+namespace simple_http {
 
+#ifdef _WIN32
+
+size_t Socket::read(char* buffer, size_t buffer_length,
+                    Socket::ReadError& error) {
     ::SOCKET native_socket = reinterpret_cast<::SOCKET>(socket_descriptor_);
     int request_bytes_count =
         ::recv(native_socket, buffer, static_cast<int>(buffer_length), 0);
@@ -34,10 +36,7 @@ size_t simple_http::Socket::read(char* buffer, size_t buffer_length,
     return static_cast<size_t>(request_bytes_count);
 }
 
-simple_http::Socket::SendError simple_http::Socket::send(const char* data,
-                                                         size_t length) {
-    using namespace simple_http;
-
+Socket::SendError Socket::send(const char* data, size_t length) {
     ::SOCKET native_socket = reinterpret_cast<::SOCKET>(socket_descriptor_);
     int result = ::send(native_socket, data, static_cast<int>(length), 0);
     if (result == SOCKET_ERROR) {
@@ -52,10 +51,7 @@ simple_http::Socket::SendError simple_http::Socket::send(const char* data,
     return Socket::SendError::kOk;
 }
 
-simple_http::Socket::SetTimeoutError simple_http::Socket::setTimeout(
-    std::chrono::milliseconds timeout) {
-    using namespace simple_http;
-
+Socket::SetTimeoutError Socket::setTimeout(std::chrono::milliseconds timeout) {
     if (timeout.count() < 0) {
         return Socket::SetTimeoutError::kWrongTimeout;
     }
@@ -74,9 +70,7 @@ simple_http::Socket::SetTimeoutError simple_http::Socket::setTimeout(
     return Socket::SetTimeoutError::kOk;
 }
 
-simple_http::Socket::CloseError simple_http::Socket::close() {
-    using namespace simple_http;
-
+Socket::CloseError Socket::close() {
     if (is_closed_) {
         return Socket::CloseError::kOk;
     }
@@ -90,4 +84,7 @@ simple_http::Socket::CloseError simple_http::Socket::close() {
     is_closed_ = true;
     return Socket::CloseError::kOk;
 }
+
 #endif
+
+}  // namespace simple_http
