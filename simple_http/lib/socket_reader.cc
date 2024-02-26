@@ -12,6 +12,7 @@ namespace simple_http {
 
 SocketReader::ReadResult SocketReader::read(SocketReader::ReadError& error) {
     if (!is_examined_ || is_completed_) {
+        error = SocketReader::ReadError::kOk;
         return SocketReader::ReadResult(buffer_, received_bytes_,
                                         is_completed_);
     }
@@ -22,7 +23,7 @@ SocketReader::ReadResult SocketReader::read(SocketReader::ReadError& error) {
                       buffer_length_ - received_bytes_, read_error);
     if (read_error != Socket::ReadError::kOk) {
         socket_->close();
-        error = SocketReader::ReadError::kUnknown;
+        error = SocketReader::ReadError::kConnectionClosed;
         return SocketReader::ReadResult();
     }
 
@@ -51,8 +52,8 @@ SocketReader::AdvanceError SocketReader::advance(size_t consumed_bytes,
     }
 
     std::copy(buffer_ + consumed_bytes, buffer_ + received_bytes_, buffer_);
-    received_bytes_ -= consumed_bytes;
     is_examined_ = examined_bytes == received_bytes_;
+    received_bytes_ -= consumed_bytes;
     return SocketReader::AdvanceError::kOk;
 }
 

@@ -34,6 +34,11 @@ add_library(
     "lib/http_method.h"
     "lib/http_connection.h"
     "lib/http_connection.cc"
+    "lib/message_body.h"
+    "lib/zero_message_body.h"
+    "lib/zero_message_body.cc"
+    "lib/content_length_message_body.h"
+    "lib/content_length_message_body.cc"
 )
 
 target_compile_features(simple_http PUBLIC cxx_std_20)

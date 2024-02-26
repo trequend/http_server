@@ -1,1 +1,8 @@
-GET http://localhost:3000/ HTTP/1.0
+GET / HTTP/1.0
+Host: localhost:3000
+
+###
+
+POST http://localhost:3000/hello HTTP/1.0
+
+Hello world!

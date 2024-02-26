@@ -121,7 +121,7 @@ int main() {
         simple_http::SocketReader reader(client_socket.get(), recv_buffer,
                                          sizeof(recv_buffer));
 
-        char response_buffer[1024];
+        char response_buffer[4096];
         simple_http::SocketWriter writer(client_socket.get(), response_buffer,
                                          sizeof(response_buffer));
 
@@ -168,8 +168,33 @@ int main() {
             std::cout << "Uri: \"" << connection.uri_ << "\"" << std::endl;
             std::cout << "Path: \"" << connection.path_ << "\"" << std::endl;
             std::cout << "Query: \"" << connection.query_ << "\"" << std::endl;
+            std::cout << "Content length: \"" << connection.content_length_
+                      << "\"" << std::endl;
             std::cout << "Headers:" << std::endl;
             PrintHeaders(connection.request_headers_);
+            if (connection.content_length_ > 0) {
+                std::cout << "Body:" << std::endl;
+                char body_buffer[1025];
+                simple_http::MessageBody::ReadError read_error;
+                size_t remaining_bytes;
+                do {
+                    remaining_bytes = connection.message_body_->read(
+                        body_buffer, sizeof(body_buffer) - 1, read_error);
+                    if (read_error !=
+                        simple_http::MessageBody::ReadError::kOk) {
+                        return;
+                    }
+
+                    if (remaining_bytes != 0) {
+                        body_buffer[remaining_bytes] = '\0';
+                        std::cout << body_buffer;
+                    } else {
+                        std::cout << std::endl;
+                    }
+                } while (remaining_bytes != 0);
+            } else {
+                std::cout << "No body" << std::endl;
+            }
             std::cout << "==================" << std::endl;
 
             std::string file_name =

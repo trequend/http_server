@@ -41,7 +41,11 @@ void HttpHeaders::add(std::string&& name, std::string&& value) {
 
 std::optional<std::vector<std::string>> HttpHeaders::get(
     const std::string& name) const {
-    auto it = headers_.find(name);
+    std::string normilized_name = name;
+    std::transform(normilized_name.begin(), normilized_name.end(),
+                   normilized_name.begin(), ::tolower);
+
+    auto it = headers_.find(normilized_name);
     if (it != headers_.end()) {
         return it->second;
     }

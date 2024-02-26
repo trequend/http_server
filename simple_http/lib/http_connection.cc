@@ -6,11 +6,14 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <string_view>
 
+#include "content_length_message_body.h"
 #include "http_parser.h"
 #include "http_uri_parser.h"
 #include "socket_reader.h"
+#include "zero_message_body.h"
 
 namespace simple_http {
 
@@ -30,8 +33,7 @@ static size_t IsEqualsCaseInsensitive(const std::string_view& first,
         return false;
     }
 
-    size_t min_length = std::min(first.length(), second.length());
-    for (size_t i = 0; i < min_length; i++) {
+    for (size_t i = 0; i < first.length(); i++) {
         if (::tolower(first[i]) != ::tolower(second[i])) {
             return false;
         }
@@ -61,6 +63,11 @@ HttpConnection::ProccessRequestError HttpConnection::proccessRequest(
         }
     } while (processing_state_ != RequestProcessingState::kParsed);
 
+    if (createMessageBody() != ParseError::kOk) {
+        sendBadRequest();
+        return ProccessRequestError::kUnknown;
+    }
+
     try {
         handler();
     } catch (...) {
@@ -68,6 +75,7 @@ HttpConnection::ProccessRequestError HttpConnection::proccessRequest(
         return ProccessRequestError::kUnknown;
     }
 
+    message_body_->consume();
     socket_->close();
     return ProccessRequestError::kOk;
 }
@@ -225,6 +233,53 @@ HttpConnection::ParseError HttpConnection::proccessHeader(
     std::string name(header.name);
     std::string value(header.value);
     request_headers_.add(std::move(name), std::move(value));
+    return ParseError::kOk;
+}
+
+HttpConnection::ParseError HttpConnection::createMessageBody() {
+    if (http_version_ == HttpVersion::kHttp09) {
+        message_body_ = std::make_unique<ZeroMessageBody>(input_);
+        content_length_ = 0;
+        return ParseError::kOk;
+    }
+
+    auto headers_search_result = request_headers_.get("Content-Length");
+    if (!headers_search_result.has_value()) {
+        message_body_ = std::make_unique<ZeroMessageBody>(input_);
+        content_length_ = 0;
+        return ParseError::kOk;
+    }
+
+    auto headers = headers_search_result.value();
+    if (headers.size() > 1) {
+        return ParseError::kBadRequest;
+    }
+
+    const std::string& header = headers[0];
+    if (header.length() > sizeof(size_t)) {
+        return ParseError::kBadRequest;
+    }
+
+    for (size_t i = 0; i < header.length(); i++) {
+        if (header[i] < '0' || header[i] > '9') {
+            return ParseError::kBadRequest;
+        }
+    }
+
+    size_t content_length = std::stoll(header);
+    if (content_length < 0) {
+        return ParseError::kBadRequest;
+    }
+
+    if (content_length > 0) {
+        message_body_ =
+            std::make_unique<ContentLengthMessageBody>(input_, content_length);
+        content_length_ = content_length;
+        return ParseError::kOk;
+    }
+
+    message_body_ = std::make_unique<ZeroMessageBody>(input_);
+    content_length_ = 0;
     return ParseError::kOk;
 }
 

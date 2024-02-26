@@ -30,8 +30,8 @@ class SocketReader {
     };
 
     enum class ReadError {
-        kUnknown = -1,
         kOk = 0,
+        kConnectionClosed = 1,
     };
 
     enum class AdvanceError {

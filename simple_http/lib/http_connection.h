@@ -5,12 +5,14 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 #include "http_headers.h"
 #include "http_method.h"
 #include "http_parser.h"
 #include "http_uri_parser.h"
 #include "http_version.h"
+#include "message_body.h"
 #include "socket_reader.h"
 #include "socket_writer.h"
 
@@ -44,6 +46,10 @@ class HttpConnection {
 
     std::string query_;
 
+    std::unique_ptr<MessageBody> message_body_;
+
+    size_t content_length_;
+
    private:
     enum class RequestProcessingState {
         kInitial,
@@ -72,6 +78,8 @@ class HttpConnection {
     ParseError takeHeader(SocketReader::ReadResult result);
 
     ParseError proccessHeader(HttpParser::RequestHeader header);
+
+    ParseError createMessageBody();
 
     void sendBadRequest();
 
