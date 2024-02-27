@@ -4,9 +4,8 @@ project(simple_http
     VERSION 0.1.0
 )
 
-add_library(
-    simple_http
-    STATIC
+set(
+    PROJECT_FILES
     "include/simple_http.h"
     "lib/init_library.h"
     "lib/init_library.cc"
@@ -39,6 +38,27 @@ add_library(
     "lib/zero_message_body.cc"
     "lib/content_length_message_body.h"
     "lib/content_length_message_body.cc"
+)
+
+find_package(
+    Doxygen
+    OPTIONAL_COMPONENTS dot mscgen dia
+)
+
+if (${DOXYGEN_FOUND})
+
+doxygen_add_docs(
+    doxygen
+    ${PROJECT_FILES}
+    USE_STAMP_FILE
+)
+
+endif()
+
+add_library(
+    simple_http
+    STATIC
+    ${PROJECT_FILES}
 )
 
 target_compile_features(simple_http PUBLIC cxx_std_20)
