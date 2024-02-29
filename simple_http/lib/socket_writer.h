@@ -13,14 +13,13 @@ namespace simple_http {
 class SocketWriter {
    public:
     enum class WriteError {
-        kUnknown = -1,
         kOk = 0,
-        kOutOfBounds = 1,
+        kConnectionClosed = 1,
     };
 
     enum class FlushError {
-        kUnknown = -1,
         kOk = 0,
+        kConnectionClosed = 1,
     };
 
     SocketWriter() = delete;

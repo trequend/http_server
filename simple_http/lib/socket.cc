@@ -4,6 +4,7 @@
 
 #include "socket.h"
 
+#include <cassert>
 #include <chrono>
 
 #ifdef _WIN32
@@ -52,9 +53,7 @@ Socket::SendError Socket::send(const char* data, size_t length) {
 }
 
 Socket::SetTimeoutError Socket::setTimeout(std::chrono::milliseconds timeout) {
-    if (timeout.count() < 0) {
-        return Socket::SetTimeoutError::kWrongTimeout;
-    }
+    assert(timeout.count() >= 0);
 
     ::SOCKET native_socket = reinterpret_cast<::SOCKET>(socket_descriptor_);
     unsigned long milliseconds = static_cast<unsigned long>(timeout.count());
@@ -64,27 +63,27 @@ Socket::SetTimeoutError Socket::setTimeout(std::chrono::milliseconds timeout) {
         setsockopt(native_socket, SOL_SOCKET, SO_SNDTIMEO,
                    reinterpret_cast<const char*>(&timeout),
                    sizeof(timeout)) == SOCKET_ERROR) {
-        return Socket::SetTimeoutError::kUnknown;
+        return Socket::SetTimeoutError::kConnectionClosed;
     }
 
     return Socket::SetTimeoutError::kOk;
 }
 
-Socket::CloseError Socket::close() {
-    if (is_closed_) {
-        return Socket::CloseError::kOk;
-    }
-
-    ::SOCKET native_socket = reinterpret_cast<::SOCKET>(socket_descriptor_);
-    int result = ::closesocket(native_socket);
-    if (result == SOCKET_ERROR) {
-        return Socket::CloseError::kUnknown;
-    }
-
-    is_closed_ = true;
-    return Socket::CloseError::kOk;
+static void CloseNativeSocket(void* native_socket) {
+    ::closesocket(reinterpret_cast<::SOCKET>(native_socket));
 }
 
 #endif
+
+Socket::~Socket() { CloseNativeSocket(socket_descriptor_); }
+
+void Socket::close() {
+    if (is_closed_) {
+        return;
+    }
+
+    CloseNativeSocket(socket_descriptor_);
+    is_closed_ = true;
+}
 
 }  // namespace simple_http

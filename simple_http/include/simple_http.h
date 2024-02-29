@@ -11,6 +11,7 @@
 #include "../lib/http_uri_parser.h"
 #include "../lib/incoming_message.h"
 #include "../lib/init_library.h"
+#include "../lib/outgoing_message.h"
 #include "../lib/server.h"
 #include "../lib/socket.h"
 #include "../lib/socket_reader.h"

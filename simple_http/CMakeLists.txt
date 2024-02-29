@@ -38,8 +38,11 @@ set(
     "lib/zero_message_body.cc"
     "lib/content_length_message_body.h"
     "lib/content_length_message_body.cc"
+    "lib/http_request_data.h"
     "lib/incoming_message.h"
     "lib/incoming_message.cc"
+    "lib/outgoing_message.h"
+    "lib/outgoing_message.cc"
 )
 
 # find_package(

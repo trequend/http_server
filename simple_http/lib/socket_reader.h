@@ -34,11 +34,6 @@ class SocketReader {
         kConnectionClosed = 1,
     };
 
-    enum class AdvanceError {
-        kOk = 0,
-        kOutOfBounds = 1,
-    };
-
     SocketReader() = delete;
 
     SocketReader(Socket* socket, char* buffer, size_t buffer_length)
@@ -46,8 +41,8 @@ class SocketReader {
 
     ReadResult read(ReadError& error);
 
-    AdvanceError advance(size_t consumed_bytes, size_t examined_bytes);
-    AdvanceError advance(size_t consumed_bytes);
+    void advance(size_t consumed_bytes, size_t examined_bytes);
+    void advance(size_t consumed_bytes);
 
    private:
     Socket* socket_ = nullptr;

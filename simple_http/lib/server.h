@@ -29,11 +29,9 @@ class Server {
     enum class BindError {
         kUnknown = -1,
         kOk = 0,
-        kAlreadyBinded = 1,
-        kWrongAddress = 2,
-        kWrongPort = 3,
-        kAddressInUse = 4,
-        kNoAccess = 5,
+        kWrongAddress = 1,
+        kAddressInUse = 2,
+        kNoAccess = 3,
     };
 
     struct ListenOptions {
@@ -45,17 +43,11 @@ class Server {
     enum class ListenError {
         kUnknown = -1,
         kOk = 0,
-        kNotBinded = 1,
-        kAlreadyListening = 2,
-        kWrongConnectionTimeout = 3,
-        kWrongBacklogSize = 4,
     };
 
     enum class AcceptError {
         kUnknown = -1,
         kOk = 0,
-        kNotBinded = 1,
-        kNotListining = 2,
     };
 
     static std::unique_ptr<Server> createServer(CreateError& error);

@@ -14,32 +14,23 @@ class Socket {
         kUnknown = -1,
         kOk = 0,
         kTimeout = 1,
-        kClosed = 2,
     };
 
     enum class SendError {
         kUnknown = -1,
         kOk = 0,
         kTimeout = 1,
-        kClosed = 2,
     };
 
     enum class SetTimeoutError {
-        kUnknown = -1,
         kOk = 0,
-        kWrongTimeout = 1,
-        kClosed = 2,
-    };
-
-    enum class CloseError {
-        kUnknown = -1,
-        kOk = 0,
+        kConnectionClosed = 1,
     };
 
     Socket() = delete;
     Socket(void* socket_descriptor) : socket_descriptor_(socket_descriptor) {}
 
-    ~Socket() { close(); }
+    ~Socket();
 
     size_t read(char* buffer, size_t buffer_length, ReadError& error);
 
@@ -47,7 +38,9 @@ class Socket {
 
     SetTimeoutError setTimeout(std::chrono::milliseconds timeout);
 
-    CloseError close();
+    bool isClosed() { return is_closed_; };
+
+    void close();
 
    private:
     void* socket_descriptor_ = nullptr;

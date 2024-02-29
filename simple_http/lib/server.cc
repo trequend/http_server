@@ -5,6 +5,7 @@
 #include "server.h"
 
 #include <atomic>
+#include <cassert>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -24,14 +25,9 @@ namespace simple_http {
 #ifdef _WIN32
 
 Server::BindError Server::bind(const Server::BindOptions& options) {
-    if (is_binded_) {
-        return Server::BindError::kAlreadyBinded;
-    }
-
     unsigned short port = static_cast<unsigned short>(options.port);
-    if (options.port < 0 || options.port > 65535) {
-        return Server::BindError::kWrongPort;
-    }
+    assert(!is_binded_);
+    assert(options.port >= 0 && options.port <= 65535);
 
     ::sockaddr_in socket_address;
     socket_address.sin_family = AF_INET;
@@ -64,22 +60,11 @@ Server::BindError Server::bind(const Server::BindOptions& options) {
 }
 
 Server::ListenError Server::listen(const Server::ListenOptions& options) {
-    if (is_listening_) {
-        return Server::ListenError::kAlreadyListening;
-    }
-
-    if (!is_binded_) {
-        return Server::ListenError::kNotBinded;
-    }
-
-    if (options.backlog_size < 0 || options.backlog_size > SOMAXCONN) {
-        return Server::ListenError::kWrongBacklogSize;
-    }
-
     long long connection_timeout = options.connection_timeout.count();
-    if (connection_timeout < 0 || connection_timeout > MAXDWORD) {
-        return Server::ListenError::kWrongConnectionTimeout;
-    }
+    assert(options.backlog_size >= 0 && options.backlog_size <= SOMAXCONN);
+    assert(connection_timeout >= 0 && connection_timeout <= MAXDWORD);
+    assert(is_binded_);
+    assert(!is_listening_);
 
     ::SOCKET native_socket =
         reinterpret_cast<::SOCKET>(socket_descriptor_.load());
@@ -105,15 +90,8 @@ Server::ListenError Server::listen(const Server::ListenOptions& options) {
 }
 
 std::unique_ptr<Socket> Server::accept(Server::AcceptError& error) {
-    if (!is_binded_) {
-        error = Server::AcceptError::kNotBinded;
-        return nullptr;
-    }
-
-    if (!is_listening_) {
-        error = Server::AcceptError::kNotListining;
-        return nullptr;
-    }
+    assert(is_binded_);
+    assert(is_listening_);
 
     ::SOCKET native_socket =
         reinterpret_cast<::SOCKET>(socket_descriptor_.load());

@@ -5,6 +5,7 @@
 #include "http_connection.h"
 
 #include <algorithm>
+#include <cassert>
 #include <functional>
 #include <memory>
 #include <string_view>
@@ -13,6 +14,7 @@
 #include "http_parser.h"
 #include "http_uri_parser.h"
 #include "incoming_message.h"
+#include "outgoing_message.h"
 #include "socket_reader.h"
 #include "zero_message_body.h"
 
@@ -44,41 +46,66 @@ static size_t IsEqualsCaseInsensitive(const std::string_view& first,
 }
 
 HttpConnection::ProccessRequestError HttpConnection::proccessRequest(
-    std::function<void(IncomingMessage message)> handler) {
-    if (processing_state_ != RequestProcessingState::kInitial) {
-        return ProccessRequestError::kAlreadyProcessed;
-    }
+    std::function<void(IncomingMessage request, OutgoingMessage response)>
+        handler) {
+    assert(processing_state_ == RequestProcessingState::kInitial);
 
     processing_state_ = RequestProcessingState::kRequestLine;
     do {
         SocketReader::ReadError read_error;
         SocketReader::ReadResult read_result = input_.read(read_error);
         if (read_error != SocketReader::ReadError::kOk) {
-            return ProccessRequestError::kUnknown;
+            return ProccessRequestError::kConnectionClosed;
         }
 
         ParseError parse_error = parseRequest(read_result);
         if (parse_error != ParseError::kOk) {
             sendBadRequest();
-            return ProccessRequestError::kUnknown;
+            return ProccessRequestError::kBadSyntax;
         }
     } while (processing_state_ != RequestProcessingState::kParsed);
 
-    if (createMessageBody() != ParseError::kOk) {
+    if (takeMessageBody() != ParseError::kOk) {
         sendBadRequest();
-        return ProccessRequestError::kUnknown;
+        return ProccessRequestError::kBadSyntax;
     }
 
-    IncomingMessage request = createRequest();
-
+    IncomingMessage request(request_data_);
+    OutgoingMessage response(request_data_, output_);
     try {
-        handler(request);
+        handler(request, response);
     } catch (...) {
-        sendInternalError();
-        return ProccessRequestError::kUnknown;
+        if (!response.isStarted()) {
+            sendInternalError();
+        }
+        return ProccessRequestError::kHandlerException;
     }
 
-    message_body_->consume();
+    if (!response.isStarted()) {
+        sendInternalError();
+        return ProccessRequestError::kHandlerException;
+    }
+
+    if (!response.isEnded()) {
+        socket_->close();
+        return ProccessRequestError::kHandlerException;
+    }
+
+    if (socket_->isClosed()) {
+        return ProccessRequestError::kConnectionClosed;
+    }
+
+    MessageBody::ReadError consume_error;
+    consume_error = request_data_.body->consume();
+    if (consume_error == MessageBody::ReadError::kBadSyntax) {
+        socket_->close();
+        return ProccessRequestError::kBadSyntax;
+    }
+
+    if (consume_error != MessageBody::ReadError::kOk) {
+        return ProccessRequestError::kConnectionClosed;
+    }
+
     socket_->close();
     return ProccessRequestError::kOk;
 }
@@ -136,44 +163,45 @@ HttpConnection::ParseError HttpConnection::proccessRequestLine(
         }
 
         if (version.major == "1" && version.minor == "0") {
-            http_version_ = HttpVersion::kHttp10;
+            request_data_.http_version = HttpVersion::kHttp10;
         } else if (version.major == "1" && version.minor == "1") {
-            http_version_ = HttpVersion::kHttp11;
+            request_data_.http_version = HttpVersion::kHttp11;
         } else {
             return ParseError::kBadRequest;
         }
         processing_state_ = RequestProcessingState::kHeaders;
     } else {
         processing_state_ = RequestProcessingState::kParsed;
-        http_version_ = HttpVersion::kHttp09;
+        request_data_.http_version = HttpVersion::kHttp09;
     }
 
-    if (http_version_ == HttpVersion::kHttp09) {
+    if (request_data_.http_version == HttpVersion::kHttp09) {
         if (IsEqualsCaseInsensitive(request_line.method, "GET")) {
-            method_ = HttpMethod::kGet;
-            method_name_ = "GET";
+            request_data_.method = HttpMethod::kGet;
+            request_data_.method_name = "GET";
         } else {
             return ParseError::kBadRequest;
         }
     } else {
         if (IsEqualsCaseInsensitive(request_line.method, "GET")) {
-            method_ = HttpMethod::kGet;
-            method_name_ = "GET";
+            request_data_.method = HttpMethod::kGet;
+            request_data_.method_name = "GET";
         } else if (IsEqualsCaseInsensitive(request_line.method, "HEAD")) {
-            method_ = HttpMethod::kHead;
-            method_name_ = "HEAD";
+            request_data_.method = HttpMethod::kHead;
+            request_data_.method_name = "HEAD";
         } else if (IsEqualsCaseInsensitive(request_line.method, "POST")) {
-            method_ = HttpMethod::kPost;
-            method_name_ = "POST";
+            request_data_.method = HttpMethod::kPost;
+            request_data_.method_name = "POST";
         } else {
-            method_ = HttpMethod::kCustom;
-            method_name_ = request_line.method;
-            std::transform(method_name_.begin(), method_name_.end(),
-                           method_name_.begin(), ::toupper);
+            request_data_.method = HttpMethod::kCustom;
+            request_data_.method_name = request_line.method;
+            std::transform(request_data_.method_name.begin(),
+                           request_data_.method_name.end(),
+                           request_data_.method_name.begin(), ::toupper);
         }
     }
 
-    href_ = request_line.uri;
+    request_data_.href = request_line.uri;
     auto parse_result = uri_parser_.parseUri(request_line.uri);
     if (!parse_result.has_value()) {
         return ParseError::kBadRequest;
@@ -181,15 +209,15 @@ HttpConnection::ParseError HttpConnection::proccessRequestLine(
 
     HttpUriParser::UriParts uri_parts = parse_result.value();
     if (uri_parts.path.has_value()) {
-        path_ = uri_parts.path.value();
+        request_data_.path = uri_parts.path.value();
     } else {
-        path_ = "/";
+        request_data_.path = "/";
     }
 
     if (uri_parts.query.has_value()) {
-        query_ = uri_parts.query.value();
+        request_data_.query = uri_parts.query.value();
     } else {
-        query_ = "";
+        request_data_.query = "";
     }
 
     return ParseError::kOk;
@@ -235,21 +263,21 @@ HttpConnection::ParseError HttpConnection::proccessHeader(
     HttpParser::RequestHeader header) {
     std::string name(header.name);
     std::string value(header.value);
-    request_headers_.add(std::move(name), std::move(value));
+    request_data_.headers.add(std::move(name), std::move(value));
     return ParseError::kOk;
 }
 
-HttpConnection::ParseError HttpConnection::createMessageBody() {
-    if (http_version_ == HttpVersion::kHttp09) {
-        message_body_ = std::make_unique<ZeroMessageBody>(input_);
-        content_length_ = 0;
+HttpConnection::ParseError HttpConnection::takeMessageBody() {
+    if (request_data_.http_version == HttpVersion::kHttp09) {
+        request_data_.body = std::make_unique<ZeroMessageBody>(input_);
+        request_data_.content_length = 0;
         return ParseError::kOk;
     }
 
-    auto headers_search_result = request_headers_.get("Content-Length");
+    auto headers_search_result = request_data_.headers.get("Content-Length");
     if (!headers_search_result.has_value()) {
-        message_body_ = std::make_unique<ZeroMessageBody>(input_);
-        content_length_ = 0;
+        request_data_.body = std::make_unique<ZeroMessageBody>(input_);
+        request_data_.content_length = 0;
         return ParseError::kOk;
     }
 
@@ -275,34 +303,20 @@ HttpConnection::ParseError HttpConnection::createMessageBody() {
     }
 
     if (content_length > 0) {
-        message_body_ =
+        request_data_.body =
             std::make_unique<ContentLengthMessageBody>(input_, content_length);
-        content_length_ = content_length;
+        request_data_.content_length = content_length;
         return ParseError::kOk;
     }
 
-    message_body_ = std::make_unique<ZeroMessageBody>(input_);
-    content_length_ = 0;
+    request_data_.body = std::make_unique<ZeroMessageBody>(input_);
+    request_data_.content_length = 0;
     return ParseError::kOk;
 }
 
-IncomingMessage HttpConnection::createRequest() {
-    IncomingMessage::RequestData data;
-    data.method = method_;
-    data.method_name = method_name_;
-    data.href = href_;
-    data.path = path_;
-    data.query = query_;
-    data.http_version = http_version_;
-    data.headers = request_headers_;
-    data.content_length = content_length_;
-    data.body = message_body_.get();
-    return IncomingMessage(data);
-}
-
 void HttpConnection::sendBadRequest() {
-    if (http_version_ != HttpVersion::kNone &&
-        http_version_ != HttpVersion::kHttp09) {
+    if (request_data_.http_version != HttpVersion::kNone &&
+        request_data_.http_version != HttpVersion::kHttp09) {
         output_.write("HTTP/1.0 400 Bad Request\r\n\r\n");
         output_.flush();
     }
@@ -311,8 +325,8 @@ void HttpConnection::sendBadRequest() {
 }
 
 void HttpConnection::sendInternalError() {
-    if (http_version_ != HttpVersion::kNone &&
-        http_version_ != HttpVersion::kHttp09) {
+    if (request_data_.http_version != HttpVersion::kNone &&
+        request_data_.http_version != HttpVersion::kHttp09) {
         output_.write("HTTP/1.0 500 Internal Server Error\r\n\r\n");
         output_.flush();
     }

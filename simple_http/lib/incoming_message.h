@@ -6,30 +6,16 @@
 
 #include <string>
 
-#include "http_headers.h"
-#include "http_method.h"
-#include "http_version.h"
+#include "http_request_data.h"
 #include "message_body.h"
 
 namespace simple_http {
 
 class IncomingMessage {
    public:
-    struct RequestData {
-        HttpMethod method;
-        std::string method_name;
-        std::string href;
-        std::string path;
-        std::string query;
-        HttpVersion http_version;
-        HttpHeaders headers;
-        size_t content_length;
-        MessageBody* body;
-    };
-
     IncomingMessage() = delete;
 
-    IncomingMessage(RequestData data) : data_(data){};
+    IncomingMessage(const HttpRequestData& data) : data_(data){};
 
     HttpMethod getMethod() const { return data_.method; };
 
@@ -50,7 +36,7 @@ class IncomingMessage {
     size_t readBody(char* buffer, size_t length, MessageBody::ReadError& error);
 
    private:
-    RequestData data_;
+    const HttpRequestData& data_;
 };
 
 }  // namespace simple_http

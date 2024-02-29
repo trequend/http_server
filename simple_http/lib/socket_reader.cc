@@ -5,6 +5,7 @@
 #include "socket_reader.h"
 
 #include <algorithm>
+#include <cassert>
 
 #include "socket.h"
 
@@ -33,28 +34,18 @@ SocketReader::ReadResult SocketReader::read(SocketReader::ReadError& error) {
     return SocketReader::ReadResult(buffer_, received_bytes_, is_completed_);
 }
 
-SocketReader::AdvanceError SocketReader::advance(size_t consumed_bytes) {
+void SocketReader::advance(size_t consumed_bytes) {
     return advance(consumed_bytes, consumed_bytes);
 }
 
-SocketReader::AdvanceError SocketReader::advance(size_t consumed_bytes,
-                                                 size_t examined_bytes) {
-    if (consumed_bytes < 0 || consumed_bytes > received_bytes_) {
-        return SocketReader::AdvanceError::kOutOfBounds;
-    }
-
-    if (examined_bytes < 0 || examined_bytes > received_bytes_) {
-        return SocketReader::AdvanceError::kOutOfBounds;
-    }
-
-    if (consumed_bytes > examined_bytes) {
-        return SocketReader::AdvanceError::kOutOfBounds;
-    }
+void SocketReader::advance(size_t consumed_bytes, size_t examined_bytes) {
+    assert(consumed_bytes >= 0 && consumed_bytes <= received_bytes_);
+    assert(examined_bytes >= 0 && examined_bytes <= received_bytes_);
+    assert(consumed_bytes <= examined_bytes);
 
     std::copy(buffer_ + consumed_bytes, buffer_ + received_bytes_, buffer_);
     is_examined_ = examined_bytes == received_bytes_;
     received_bytes_ -= consumed_bytes;
-    return SocketReader::AdvanceError::kOk;
 }
 
 }  // namespace simple_http

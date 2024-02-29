@@ -5,6 +5,7 @@
 #include "socket_writer.h"
 
 #include <algorithm>
+#include <cassert>
 #include <string>
 
 #include "socket.h"
@@ -17,9 +18,7 @@ SocketWriter::WriteError SocketWriter::write(const std::string& value) {
 
 SocketWriter::WriteError SocketWriter::write(const char* source_buffer,
                                              size_t source_buffer_length) {
-    if (source_buffer_length < 0) {
-        return SocketWriter::WriteError::kOutOfBounds;
-    }
+    assert(source_buffer_length >= 0);
 
     do {
         size_t bytes_to_copy =
@@ -37,7 +36,7 @@ SocketWriter::WriteError SocketWriter::write(const char* source_buffer,
         if (saved_bytes_ == buffer_length_) {
             SocketWriter::FlushError flush_error = flush();
             if (flush_error != SocketWriter::FlushError::kOk) {
-                return SocketWriter::WriteError::kUnknown;
+                return SocketWriter::WriteError::kConnectionClosed;
             }
         }
     } while (source_buffer_length != 0);
@@ -53,7 +52,7 @@ SocketWriter::FlushError SocketWriter::flush() {
     Socket::SendError send_error = socket_->send(buffer_, saved_bytes_);
     if (send_error != Socket::SendError::kOk) {
         socket_->close();
-        return SocketWriter::FlushError::kUnknown;
+        return SocketWriter::FlushError::kConnectionClosed;
     }
 
     saved_bytes_ = 0;

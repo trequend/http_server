@@ -16,7 +16,7 @@ InitLibraryError InitLibrary();
 
 enum class CleanupLibraryError {
     kOk = 0,
-    kSocketLibrary = -1,
+    kSocketLibrary = 1,
 };
 
 CleanupLibraryError CleanupLibrary();
