@@ -127,14 +127,14 @@ int main() {
 
         simple_http::HttpConnection connection(client_socket.get(), reader,
                                                writer);
-        connection.proccessRequest([&]() {
+        connection.proccessRequest([&](simple_http::IncomingMessage request) {
             const char* http_ok_line_parts[] = {"HTTP/1.0",
                                                 " 200"
                                                 " OK\r\n"};
             const char* http_not_found_line_parts[] = {"HTTP/1.0",
                                                        " 404"
                                                        " Not Found\r\n"};
-            if (connection.path_ == "/") {
+            if (request.getPath() == "/") {
                 for (size_t i = 0;
                      i < sizeof(http_ok_line_parts) / sizeof(char*); i++) {
                     auto write_error = writer.write(
@@ -163,22 +163,22 @@ int main() {
             }
 
             std::cout << "=== Connection ===" << std::endl;
-            std::cout << "Method: \"" << connection.method_name_ << "\""
+            std::cout << "Method: \"" << request.getMethodName() << "\""
                       << std::endl;
-            std::cout << "Uri: \"" << connection.uri_ << "\"" << std::endl;
-            std::cout << "Path: \"" << connection.path_ << "\"" << std::endl;
-            std::cout << "Query: \"" << connection.query_ << "\"" << std::endl;
-            std::cout << "Content length: \"" << connection.content_length_
+            std::cout << "Href: \"" << request.getHref() << "\"" << std::endl;
+            std::cout << "Path: \"" << request.getPath() << "\"" << std::endl;
+            std::cout << "Query: \"" << request.getQuery() << "\"" << std::endl;
+            std::cout << "Content length: \"" << request.getContentLength()
                       << "\"" << std::endl;
             std::cout << "Headers:" << std::endl;
-            PrintHeaders(connection.request_headers_);
-            if (connection.content_length_ > 0) {
+            PrintHeaders(request.getHeaders());
+            if (request.getContentLength() > 0) {
                 std::cout << "Body:" << std::endl;
                 char body_buffer[1025];
                 simple_http::MessageBody::ReadError read_error;
                 size_t remaining_bytes;
                 do {
-                    remaining_bytes = connection.message_body_->read(
+                    remaining_bytes = request.readBody(
                         body_buffer, sizeof(body_buffer) - 1, read_error);
                     if (read_error !=
                         simple_http::MessageBody::ReadError::kOk) {
@@ -198,7 +198,7 @@ int main() {
             std::cout << "==================" << std::endl;
 
             std::string file_name =
-                connection.path_ == "/" ? "www/index.html" : "www/_404.html";
+                request.getPath() == "/" ? "www/index.html" : "www/_404.html";
             std::ifstream file(file_name, std::ios::binary);
 
             if (!file.is_open()) {

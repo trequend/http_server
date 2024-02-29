@@ -12,6 +12,7 @@
 #include "http_parser.h"
 #include "http_uri_parser.h"
 #include "http_version.h"
+#include "incoming_message.h"
 #include "message_body.h"
 #include "socket_reader.h"
 #include "socket_writer.h"
@@ -30,25 +31,8 @@ class HttpConnection {
     HttpConnection(Socket* socket, SocketReader& input, SocketWriter& output)
         : socket_(socket), input_(input), output_(output){};
 
-    ProccessRequestError proccessRequest(std::function<void()> handler);
-
-    HttpHeaders request_headers_;
-
-    HttpMethod method_ = HttpMethod::kNone;
-
-    std::string method_name_;
-
-    HttpVersion http_version_ = HttpVersion::kNone;
-
-    std::string uri_;
-
-    std::string path_;
-
-    std::string query_;
-
-    std::unique_ptr<MessageBody> message_body_;
-
-    size_t content_length_;
+    ProccessRequestError proccessRequest(
+        std::function<void(IncomingMessage request)> handler);
 
    private:
     enum class RequestProcessingState {
@@ -81,6 +65,8 @@ class HttpConnection {
 
     ParseError createMessageBody();
 
+    IncomingMessage createRequest();
+
     void sendBadRequest();
 
     void sendInternalError();
@@ -93,5 +79,15 @@ class HttpConnection {
     HttpUriParser uri_parser_;
 
     RequestProcessingState processing_state_ = RequestProcessingState::kInitial;
+
+    HttpHeaders request_headers_;
+    HttpMethod method_ = HttpMethod::kNone;
+    std::string method_name_;
+    HttpVersion http_version_ = HttpVersion::kNone;
+    std::string href_;
+    std::string path_;
+    std::string query_;
+    size_t content_length_;
+    std::unique_ptr<MessageBody> message_body_;
 };
 }  // namespace simple_http

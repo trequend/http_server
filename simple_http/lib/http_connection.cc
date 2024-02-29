@@ -12,6 +12,7 @@
 #include "content_length_message_body.h"
 #include "http_parser.h"
 #include "http_uri_parser.h"
+#include "incoming_message.h"
 #include "socket_reader.h"
 #include "zero_message_body.h"
 
@@ -43,7 +44,7 @@ static size_t IsEqualsCaseInsensitive(const std::string_view& first,
 }
 
 HttpConnection::ProccessRequestError HttpConnection::proccessRequest(
-    std::function<void()> handler) {
+    std::function<void(IncomingMessage message)> handler) {
     if (processing_state_ != RequestProcessingState::kInitial) {
         return ProccessRequestError::kAlreadyProcessed;
     }
@@ -68,8 +69,10 @@ HttpConnection::ProccessRequestError HttpConnection::proccessRequest(
         return ProccessRequestError::kUnknown;
     }
 
+    IncomingMessage request = createRequest();
+
     try {
-        handler();
+        handler(request);
     } catch (...) {
         sendInternalError();
         return ProccessRequestError::kUnknown;
@@ -170,7 +173,7 @@ HttpConnection::ParseError HttpConnection::proccessRequestLine(
         }
     }
 
-    uri_ = request_line.uri;
+    href_ = request_line.uri;
     auto parse_result = uri_parser_.parseUri(request_line.uri);
     if (!parse_result.has_value()) {
         return ParseError::kBadRequest;
@@ -281,6 +284,20 @@ HttpConnection::ParseError HttpConnection::createMessageBody() {
     message_body_ = std::make_unique<ZeroMessageBody>(input_);
     content_length_ = 0;
     return ParseError::kOk;
+}
+
+IncomingMessage HttpConnection::createRequest() {
+    IncomingMessage::RequestData data;
+    data.method = method_;
+    data.method_name = method_name_;
+    data.href = href_;
+    data.path = path_;
+    data.query = query_;
+    data.http_version = http_version_;
+    data.headers = request_headers_;
+    data.content_length = content_length_;
+    data.body = message_body_.get();
+    return IncomingMessage(data);
 }
 
 void HttpConnection::sendBadRequest() {

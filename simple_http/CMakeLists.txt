@@ -38,22 +38,24 @@ set(
     "lib/zero_message_body.cc"
     "lib/content_length_message_body.h"
     "lib/content_length_message_body.cc"
+    "lib/incoming_message.h"
+    "lib/incoming_message.cc"
 )
 
-find_package(
-    Doxygen
-    OPTIONAL_COMPONENTS dot mscgen dia
-)
+# find_package(
+#     Doxygen
+#     OPTIONAL_COMPONENTS dot mscgen dia
+# )
 
-if (${DOXYGEN_FOUND})
+# if (${DOXYGEN_FOUND})
 
-doxygen_add_docs(
-    doxygen
-    ${PROJECT_FILES}
-    USE_STAMP_FILE
-)
+# doxygen_add_docs(
+#     doxygen
+#     ${PROJECT_FILES}
+#     USE_STAMP_FILE
+# )
 
-endif()
+# endif()
 
 add_library(
     simple_http
