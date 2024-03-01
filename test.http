@@ -6,3 +6,8 @@ Host: localhost:3000
 POST http://localhost:3000/hello HTTP/1.0
 
 Hello world!
+
+###
+
+HEAD / HTTP/1.0
+Host: localhost:3000

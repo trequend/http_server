@@ -4,6 +4,7 @@
 
 #include "outgoing_message.h"
 
+#include "http_method.h"
 #include "http_version.h"
 
 namespace simple_http {
@@ -45,6 +46,10 @@ OutgoingMessage::WriteError OutgoingMessage::write(const char* buffer,
         if (write_head_error != WriteHeadError::kOk) {
             return WriteError::kConnectionClosed;
         }
+    }
+
+    if (request_data_.method == HttpMethod::kHead) {
+        return WriteError::kOk;
     }
 
     SocketWriter::WriteError write_error;
