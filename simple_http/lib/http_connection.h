@@ -34,7 +34,7 @@ class HttpConnection {
         : socket_(socket), input_(input), output_(output){};
 
     ProccessRequestError proccessRequest(
-        std::function<void(IncomingMessage request, OutgoingMessage response)>
+        std::function<void(IncomingMessage& request, OutgoingMessage& response)>
             handler);
 
    private:

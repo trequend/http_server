@@ -46,7 +46,7 @@ static size_t IsEqualsCaseInsensitive(const std::string_view& first,
 }
 
 HttpConnection::ProccessRequestError HttpConnection::proccessRequest(
-    std::function<void(IncomingMessage request, OutgoingMessage response)>
+    std::function<void(IncomingMessage& request, OutgoingMessage& response)>
         handler) {
     assert(processing_state_ == RequestProcessingState::kInitial);
 
@@ -269,14 +269,14 @@ HttpConnection::ParseError HttpConnection::proccessHeader(
 
 HttpConnection::ParseError HttpConnection::takeMessageBody() {
     if (request_data_.http_version == HttpVersion::kHttp09) {
-        request_data_.body = std::make_unique<ZeroMessageBody>(input_);
+        request_data_.body = std::make_unique<ZeroMessageBody>();
         request_data_.content_length = 0;
         return ParseError::kOk;
     }
 
     auto headers_search_result = request_data_.headers.get("Content-Length");
     if (!headers_search_result.has_value()) {
-        request_data_.body = std::make_unique<ZeroMessageBody>(input_);
+        request_data_.body = std::make_unique<ZeroMessageBody>();
         request_data_.content_length = 0;
         return ParseError::kOk;
     }
@@ -309,7 +309,7 @@ HttpConnection::ParseError HttpConnection::takeMessageBody() {
         return ParseError::kOk;
     }
 
-    request_data_.body = std::make_unique<ZeroMessageBody>(input_);
+    request_data_.body = std::make_unique<ZeroMessageBody>();
     request_data_.content_length = 0;
     return ParseError::kOk;
 }

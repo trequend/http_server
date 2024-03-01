@@ -10,26 +10,10 @@
 namespace simple_http {
 
 size_t ZeroMessageBody::read(char* buffer, size_t length, ReadError& error) {
-    SocketReader::ReadError read_error;
-    SocketReader::ReadResult result = input_.read(read_error);
-    if (read_error != SocketReader::ReadError::kOk) {
-        error = ReadError::kConnectionClosed;
-        return -1;
-    }
-
-    if (result.getLength() != 0) {
-        error = ReadError::kBadSyntax;
-        return -1;
-    }
-
     error = ReadError::kOk;
     return 0;
 }
 
-MessageBody::ReadError ZeroMessageBody::consume() {
-    MessageBody::ReadError read_error;
-    read(nullptr, 0, read_error);
-    return read_error;
-}
+MessageBody::ReadError ZeroMessageBody::consume() { return ReadError::kOk; }
 
 }  // namespace simple_http

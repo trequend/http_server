@@ -42,7 +42,7 @@ int main() {
     }
 
     simple_http::Server::ListenOptions listen_options;
-    listen_options.backlog_size = 100;
+    listen_options.backlog_size = SOMAXCONN;
     simple_http::Server::ListenError listen_error =
         server->listen(listen_options);
     if (listen_error != simple_http::Server::ListenError::kOk) {
@@ -50,46 +50,6 @@ int main() {
                   << std::endl;
         return EXIT_FAILURE;
     }
-
-    simple_http::HttpHeaders test_headers;
-    test_headers.add("Content-Length", "126");
-    test_headers.add("Content-Type", "text/html; charset=UTF-8");
-    test_headers.add("X-Powered-By", "simple_http");
-    test_headers.add("Set-Cookie", "hello=world!");
-    test_headers.add("Set-Cookie", "session_data=data");
-    std::cout << "=== Headers ===" << std::endl;
-    PrintHeaders(test_headers);
-    std::cout << "===============" << std::endl << std::endl;
-
-    std::cout << "=== Parsers ===" << std::endl;
-
-    std::string request_line =
-        "GET      http://localhost:3000/hey%2f/how;are;you?world=hello "
-        "HTTP/1.0";
-    std::cout << "Request line: \"" << request_line << "\"" << std::endl;
-    simple_http::HttpParser parser;
-    simple_http::HttpParser::ParseRequestLineError parse_request_line_error;
-    auto request_line_parse_result =
-        parser.parseRequestLine(request_line, parse_request_line_error);
-    PrintRequestLineParserResult(request_line_parse_result);
-
-    if (request_line_parse_result.has_value()) {
-        auto uri = request_line_parse_result.value().uri;
-        simple_http::HttpUriParser uri_parser;
-        auto uri_parse_result = uri_parser.parseUri(uri);
-        PrintRequestUriParserResult(uri_parse_result);
-    }
-
-    std::cout << std::endl;
-
-    std::string header_line = "Content-Length: 22";
-    std::cout << "Header line: \"" << header_line << "\"" << std::endl;
-    simple_http::HttpParser::ParseRequestHeaderError parse_header_error;
-    auto request_header_parse_result =
-        parser.parseRequestHeader(header_line, parse_header_error);
-    PrintRequestHeaderParserResult(request_header_parse_result);
-
-    std::cout << "===============" << std::endl << std::endl;
 
     std::cout << "Listening port 3000..." << std::endl;
 
@@ -127,8 +87,8 @@ int main() {
 
         simple_http::HttpConnection connection(client_socket.get(), reader,
                                                writer);
-        connection.proccessRequest([&](simple_http::IncomingMessage request,
-                                       simple_http::OutgoingMessage response) {
+        connection.proccessRequest([&](simple_http::IncomingMessage& request,
+                                       simple_http::OutgoingMessage& response) {
             std::cout << "=== Connection ===" << std::endl;
             std::cout << "Method: \"" << request.getMethodName() << "\""
                       << std::endl;
