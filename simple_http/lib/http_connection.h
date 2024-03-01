@@ -7,6 +7,7 @@
 #include <functional>
 #include <memory>
 
+#include "http_connection_handler.h"
 #include "http_headers.h"
 #include "http_method.h"
 #include "http_parser.h"
@@ -33,9 +34,7 @@ class HttpConnection {
     HttpConnection(Socket* socket, SocketReader& input, SocketWriter& output)
         : socket_(socket), input_(input), output_(output){};
 
-    ProccessRequestError proccessRequest(
-        std::function<void(IncomingMessage& request, OutgoingMessage& response)>
-            handler);
+    ProccessRequestError proccessRequest(HttpConnectionHandler handler);
 
    private:
     enum class RequestProcessingState {

@@ -4,11 +4,58 @@
 
 #pragma once
 
+#include <cassert>
+#include <chrono>
+#include <memory>
+#include <string>
+
+#include "http_connection_handler.h"
+
 namespace simple_http {
 
 class HttpServer {
    public:
-    void sayHello();
+    struct Options {
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(1000);
+        size_t request_buffer_length = 4096;
+        size_t response_buffer_length = 4096;
+    };
+
+    enum class CreateServerError {
+        kOk = 0,
+        kLibraryNotInitialzed = 1,
+    };
+
+    enum class ListenError {
+        kUnknown = -1,
+        kOk = 0,
+        kWrongAddress = 1,
+        kAddressInUse = 2,
+        kNoAccess = 3,
+    };
+
+    HttpServer() = delete;
+
+    ~HttpServer();
+
+    static std::unique_ptr<HttpServer> createServer(
+        HttpConnectionHandler handler, CreateServerError& error);
+    static std::unique_ptr<HttpServer> createServer(
+        Options options, HttpConnectionHandler handler,
+        CreateServerError& error);
+
+    ListenError listen(int port);
+    ListenError listen(int port, std::string hostname);
+    ListenError listen(int port, std::string hostname, size_t backlog);
+
+   private:
+    HttpServer(Options options, HttpConnectionHandler handler)
+        : options_(options), handler_(handler){};
+
+    Options options_;
+    HttpConnectionHandler handler_;
+
+    bool should_cleanup_library_ = false;
 };
 
 }  // namespace simple_http

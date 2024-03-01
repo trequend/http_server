@@ -31,6 +31,7 @@ set(
     "lib/http_uri_parser.cc"
     "lib/http_version.h"
     "lib/http_method.h"
+    "lib/http_connection_handler.h"
     "lib/http_connection.h"
     "lib/http_connection.cc"
     "lib/message_body.h"

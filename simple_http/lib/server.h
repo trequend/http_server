@@ -35,9 +35,7 @@ class Server {
     };
 
     struct ListenOptions {
-        std::chrono::milliseconds connection_timeout =
-            std::chrono::milliseconds(0);
-        int backlog_size = 0;
+        size_t backlog = 0;
     };
 
     enum class ListenError {

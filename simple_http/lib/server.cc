@@ -60,29 +60,16 @@ Server::BindError Server::bind(const Server::BindOptions& options) {
 }
 
 Server::ListenError Server::listen(const Server::ListenOptions& options) {
-    long long connection_timeout = options.connection_timeout.count();
-    assert(options.backlog_size >= 0 && options.backlog_size <= SOMAXCONN);
-    assert(connection_timeout >= 0 && connection_timeout <= MAXDWORD);
+    assert(options.backlog >= 0 && options.backlog <= SOMAXCONN);
     assert(is_binded_);
     assert(!is_listening_);
 
     ::SOCKET native_socket =
         reinterpret_cast<::SOCKET>(socket_descriptor_.load());
-    int listen_result = ::listen(native_socket, options.backlog_size);
+    int listen_result =
+        ::listen(native_socket, static_cast<int>(options.backlog));
     if (listen_result == SOCKET_ERROR) {
         return Server::ListenError::kUnknown;
-    }
-
-    if (connection_timeout > 0) {
-        unsigned long timeout = static_cast<unsigned long>(connection_timeout);
-        if (::setsockopt(native_socket, SOL_SOCKET, SO_RCVTIMEO,
-                         reinterpret_cast<const char*>(&timeout),
-                         sizeof(timeout)) == SOCKET_ERROR ||
-            ::setsockopt(native_socket, SOL_SOCKET, SO_SNDTIMEO,
-                         reinterpret_cast<const char*>(&timeout),
-                         sizeof(timeout)) == SOCKET_ERROR) {
-            return Server::ListenError::kUnknown;
-        }
     }
 
     is_listening_ = true;

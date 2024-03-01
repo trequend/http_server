@@ -6,11 +6,11 @@
 
 #include <algorithm>
 #include <cassert>
-#include <functional>
 #include <memory>
 #include <string_view>
 
 #include "content_length_message_body.h"
+#include "http_connection_handler.h"
 #include "http_parser.h"
 #include "http_uri_parser.h"
 #include "incoming_message.h"
@@ -46,8 +46,7 @@ static size_t IsEqualsCaseInsensitive(const std::string_view& first,
 }
 
 HttpConnection::ProccessRequestError HttpConnection::proccessRequest(
-    std::function<void(IncomingMessage& request, OutgoingMessage& response)>
-        handler) {
+    HttpConnectionHandler handler) {
     assert(processing_state_ == RequestProcessingState::kInitial);
 
     processing_state_ = RequestProcessingState::kRequestLine;
