@@ -17,8 +17,8 @@ class HttpServer {
    public:
     struct Options {
         std::chrono::milliseconds timeout = std::chrono::milliseconds(1000);
-        size_t request_buffer_length = 4096;
-        size_t response_buffer_length = 4096;
+        size_t request_buffer_length = 32768;
+        size_t response_buffer_length = 32768;
     };
 
     enum class CreateServerError {
