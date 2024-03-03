@@ -11,7 +11,7 @@
 const std::filesystem::path kStaticDir =
     std::filesystem::weakly_canonical("www");
 
-const std::filesystem::path kNotFoundPage = kStaticDir / "_404.html";
+const std::filesystem::path kNotFoundPage = kStaticDir / "index.html";
 
 void HandleRequest(simple_http::IncomingMessage& request,
                    simple_http::OutgoingMessage& response);
@@ -53,7 +53,7 @@ void HandleRequest(simple_http::IncomingMessage& request,
     auto file_path =
         simple_http::GetRequestFilePath(request.getPath(), kStaticDir);
     if (!file_path.has_value()) {
-        return simple_http::ResponseWithFile(response, "404", "Not Found",
+        return simple_http::ResponseWithFile(response, "200", "OK",
                                              kNotFoundPage);
     }
 
