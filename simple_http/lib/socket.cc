@@ -75,8 +75,6 @@ static void CloseNativeSocket(void* native_socket) {
 
 #endif
 
-Socket::~Socket() { CloseNativeSocket(socket_descriptor_); }
-
 void Socket::close() {
     if (is_closed_) {
         return;

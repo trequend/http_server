@@ -30,7 +30,7 @@ class Socket {
     Socket() = delete;
     Socket(void* socket_descriptor) : socket_descriptor_(socket_descriptor) {}
 
-    ~Socket();
+    ~Socket() { close(); };
 
     size_t read(char* buffer, size_t buffer_length, ReadError& error);
 
