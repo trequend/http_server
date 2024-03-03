@@ -25,7 +25,7 @@ class HttpServer {
             static_cast<size_t>(std::thread::hardware_concurrency());
     };
 
-    enum class CreateServerError {
+    enum class CreateError {
         kOk = 0,
         kLibraryNotInitialzed = 1,
     };
@@ -43,11 +43,11 @@ class HttpServer {
 
     ~HttpServer();
 
-    static std::unique_ptr<HttpServer> createServer(
-        HttpConnectionHandler handler, CreateServerError& error);
-    static std::unique_ptr<HttpServer> createServer(
-        Options options, HttpConnectionHandler handler,
-        CreateServerError& error);
+    static std::unique_ptr<HttpServer> create(HttpConnectionHandler handler,
+                                              CreateError& error);
+    static std::unique_ptr<HttpServer> create(Options options,
+                                              HttpConnectionHandler handler,
+                                              CreateError& error);
 
     ListenError listen(int port);
     ListenError listen(int port, std::string hostname);

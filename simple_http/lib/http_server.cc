@@ -22,14 +22,14 @@ HttpServer::~HttpServer() {
     }
 }
 
-std::unique_ptr<HttpServer> HttpServer::createServer(
-    HttpConnectionHandler handler, HttpServer::CreateServerError& error) {
-    return createServer(Options(), handler, error);
+std::unique_ptr<HttpServer> HttpServer::create(HttpConnectionHandler handler,
+                                               HttpServer::CreateError& error) {
+    return create(Options(), handler, error);
 }
 
-std::unique_ptr<HttpServer> HttpServer::createServer(
-    HttpServer::Options options, HttpConnectionHandler handler,
-    HttpServer::CreateServerError& error) {
+std::unique_ptr<HttpServer> HttpServer::create(HttpServer::Options options,
+                                               HttpConnectionHandler handler,
+                                               HttpServer::CreateError& error) {
     assert(options.timeout.count() >= 0);
     assert(options.request_buffer_length >= 1024);
     assert(options.response_buffer_length >= 1024);
@@ -39,7 +39,7 @@ std::unique_ptr<HttpServer> HttpServer::createServer(
         should_cleanup_library = true;
         InitLibraryError library_error = InitLibrary();
         if (library_error != InitLibraryError::kOk) {
-            error = CreateServerError::kLibraryNotInitialzed;
+            error = CreateError::kLibraryNotInitialzed;
             return nullptr;
         }
     }
@@ -47,7 +47,7 @@ std::unique_ptr<HttpServer> HttpServer::createServer(
     std::unique_ptr<HttpServer> server =
         std::unique_ptr<HttpServer>(new HttpServer(options, handler));
     server->should_cleanup_library_ = should_cleanup_library;
-    error = CreateServerError::kOk;
+    error = CreateError::kOk;
     return server;
 }
 

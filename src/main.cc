@@ -27,10 +27,9 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    simple_http::HttpServer::CreateServerError create_error;
-    auto server =
-        simple_http::HttpServer::createServer(HandleRequest, create_error);
-    if (create_error != simple_http::HttpServer::CreateServerError::kOk) {
+    simple_http::HttpServer::CreateError create_error;
+    auto server = simple_http::HttpServer::create(HandleRequest, create_error);
+    if (create_error != simple_http::HttpServer::CreateError::kOk) {
         std::cerr << "Create error: " << static_cast<int>(create_error)
                   << std::endl;
         return EXIT_FAILURE;
