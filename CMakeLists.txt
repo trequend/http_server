@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.14.0)
 
 add_subdirectory("simple_http")
+add_subdirectory("tests")
 
 project(http_server
     VERSION 0.1.0
