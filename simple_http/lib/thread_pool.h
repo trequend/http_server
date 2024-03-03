@@ -59,7 +59,7 @@ class ThreadPool {
     }
 
     size_t getPlannedTasksCount() {
-        std::unique_lock(mutex_);
+        std::unique_lock lock(mutex_);
         return tasks_.size();
     }
 
