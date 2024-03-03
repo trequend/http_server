@@ -11,3 +11,4 @@
 #include "../lib/incoming_message.h"
 #include "../lib/init_library.h"
 #include "../lib/outgoing_message.h"
+#include "../lib/utils.h"

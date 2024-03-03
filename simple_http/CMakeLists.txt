@@ -44,6 +44,8 @@ set(
     "lib/incoming_message.cc"
     "lib/outgoing_message.h"
     "lib/outgoing_message.cc"
+    "lib/utils.h"
+    "lib/utils.cc"
 )
 
 # find_package(
