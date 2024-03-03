@@ -73,6 +73,10 @@
         "array": "cpp",
         "string_view": "cpp",
         "unordered_set": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "queue": "cpp",
+        "deque": "cpp",
+        "span": "cpp",
+        "ranges": "cpp"
     }
 }

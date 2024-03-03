@@ -46,6 +46,7 @@ set(
     "lib/outgoing_message.cc"
     "lib/utils.h"
     "lib/utils.cc"
+    "lib/thread_pool.h"
 )
 
 # find_package(

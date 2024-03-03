@@ -12,8 +12,7 @@
 #include "init_library.h"
 #include "server.h"
 #include "socket.h"
-#include "socket_reader.h"
-#include "socket_writer.h"
+#include "thread_pool.h"
 
 namespace simple_http {
 
@@ -94,8 +93,16 @@ HttpServer::ListenError HttpServer::listen(int port, std::string hostname,
         return ListenError::kUnknown;
     }
 
-    std::vector<char> request_buffer(options_.request_buffer_length);
-    std::vector<char> response_buffer(options_.response_buffer_length);
+    auto thread_pool = ThreadPool<ThreadState>::create(
+        options_.threads_count, [this](size_t index) {
+            auto state = std::make_unique<ThreadState>();
+            state->request_buffer.resize(options_.request_buffer_length);
+            state->response_buffer.resize(options_.request_buffer_length);
+            return state;
+        });
+    if (thread_pool == nullptr) {
+        return ListenError::kPoolCreation;
+    }
 
     while (true) {
         simple_http::Server::AcceptError accept_error;
@@ -113,13 +120,15 @@ HttpServer::ListenError HttpServer::listen(int port, std::string hostname,
             }
         }
 
-        SocketReader reader(client_socket.get(), request_buffer.data(),
-                            request_buffer.size());
-        SocketWriter writer(client_socket.get(), response_buffer.data(),
-                            response_buffer.size());
-
-        HttpConnection connection(client_socket.get(), reader, writer);
-        connection.proccessRequest(handler_);
+        std::shared_ptr<simple_http::Socket> shared_client_socket =
+            std::move(client_socket);
+        thread_pool->post([client_socket = std::move(shared_client_socket),
+                           this](ThreadState* state) {
+            HttpConnection connection(client_socket.get(),
+                                      state->request_buffer,
+                                      state->response_buffer);
+            connection.proccessRequest(handler_);
+        });
     }
 
     return ListenError::kOk;

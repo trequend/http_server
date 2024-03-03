@@ -6,6 +6,7 @@
 
 #include <functional>
 #include <memory>
+#include <vector>
 
 #include "http_connection_handler.h"
 #include "http_headers.h"
@@ -31,8 +32,11 @@ class HttpConnection {
 
     HttpConnection() = delete;
 
-    HttpConnection(Socket* socket, SocketReader& input, SocketWriter& output)
-        : socket_(socket), input_(input), output_(output){};
+    HttpConnection(Socket* socket, std::vector<char>& request_buffer,
+                   std::vector<char>& response_buffer)
+        : socket_(socket),
+          input_(socket, request_buffer.data(), request_buffer.size()),
+          output_(socket, response_buffer.data(), response_buffer.size()){};
 
     ProccessRequestError proccessRequest(HttpConnectionHandler handler);
 
@@ -72,8 +76,8 @@ class HttpConnection {
     void sendInternalError();
 
     Socket* socket_;
-    SocketReader& input_;
-    SocketWriter& output_;
+    SocketReader input_;
+    SocketWriter output_;
 
     HttpParser parser_;
     HttpUriParser uri_parser_;
