@@ -335,7 +335,7 @@ bool HttpUriParser::parseEncodedSymbol(const std::string_view& line,
     }
 
     if (line.length() - state.index < 2 || !IsHex(line[state.index]) ||
-        !IsHex(line[state.index])) {
+        !IsHex(line[state.index + 1])) {
         state.is_malformed = true;
         return false;
     }
