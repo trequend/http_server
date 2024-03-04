@@ -85,7 +85,7 @@ std::optional<std::filesystem::path> GetRequestFilePath(
 
     if (std::filesystem::is_directory(file_path)) {
         file_path /= "index.html";
-    } else if (file_path.filename().native().starts_with(L"_")) {
+    } else if (file_path.filename().generic_wstring().starts_with(L"_")) {
         return std::nullopt;
     }
 
@@ -114,7 +114,8 @@ void ResponseWithFile(OutgoingMessage& response, const std::string& code,
     simple_http::HttpHeaders& headers = response.getHeaders();
     headers.add("Content-Length", std::to_string(file_size));
     headers.add("Content-Type",
-                GetMimeType(file_path.extension()) + "; charset=UTF-8");
+                GetMimeType(file_path.extension().generic_wstring()) +
+                    "; charset=UTF-8");
     headers.add("X-Powered-By", "simple_http");
 
     response.writeHead(code, message);

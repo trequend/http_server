@@ -109,7 +109,11 @@ HttpServer::ListenError HttpServer::listen(int port, std::string hostname,
         std::unique_ptr<simple_http::Socket> client_socket =
             tcp_server->accept(accept_error);
         if (accept_error != simple_http::Server::AcceptError::kOk) {
-            continue;
+            if (accept_error == simple_http::Server::AcceptError::kInterrupt) {
+                break;
+            } else {
+                continue;
+            }
         }
 
         if (options_.timeout.count() > 0) {

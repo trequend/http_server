@@ -11,8 +11,7 @@ set(
     "lib/init_library.cc"
     "lib/init_socket_library.h"
     "lib/init_socket_library.cc"
-    "lib/http_server.h"
-    "lib/http_server.cc"
+    "lib/socket_descriptor.h"
     "lib/server.h"
     "lib/server.cc"
     "lib/socket.h"
@@ -47,6 +46,8 @@ set(
     "lib/utils.h"
     "lib/utils.cc"
     "lib/thread_pool.h"
+    "lib/http_server.h"
+    "lib/http_server.cc"
 )
 
 # find_package(

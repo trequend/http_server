@@ -55,8 +55,28 @@ CleanupSocketLibraryError CleanupSocketLibrary() {
     return CleanupSocketLibraryError::kOk;
 }
 
-bool IsSocketLibraryInitialized() { return g_IsSocketLibraryInitialized; }
+#elif __linux__
+
+InitSocketLibraryError InitSocketLibrary() {
+    if (g_IsSocketLibraryInitialized) {
+        return InitSocketLibraryError::kAlreadyInitialzed;
+    }
+
+    g_IsSocketLibraryInitialized = true;
+    return InitSocketLibraryError::kOk;
+}
+
+CleanupSocketLibraryError CleanupSocketLibrary() {
+    if (!g_IsSocketLibraryInitialized) {
+        return CleanupSocketLibraryError::kOk;
+    }
+
+    g_IsSocketLibraryInitialized = false;
+    return CleanupSocketLibraryError::kOk;
+}
 
 #endif
+
+bool IsSocketLibraryInitialized() { return g_IsSocketLibraryInitialized; }
 
 }  // namespace simple_http

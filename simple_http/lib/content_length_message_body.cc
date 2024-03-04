@@ -8,6 +8,8 @@
 
 #include "message_body.h"
 
+#undef min
+
 namespace simple_http {
 
 size_t ContentLengthMessageBody::read(char *buffer, size_t length,

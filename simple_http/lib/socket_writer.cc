@@ -10,6 +10,8 @@
 
 #include "socket.h"
 
+#undef min
+
 namespace simple_http {
 
 SocketWriter::WriteError SocketWriter::write(const std::string& value) {

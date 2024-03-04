@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include <atomic>
 #include <chrono>
 #include <memory>
 #include <string>
 
 #include "socket.h"
+#include "socket_descriptor.h"
 
 namespace simple_http {
 
@@ -46,6 +46,7 @@ class Server {
     enum class AcceptError {
         kUnknown = -1,
         kOk = 0,
+        kInterrupt = 1,
     };
 
     static std::unique_ptr<Server> createServer(CreateError& error);
@@ -61,11 +62,12 @@ class Server {
     std::unique_ptr<Socket> accept(AcceptError& error);
 
    private:
-    Server(void* socket_descriptor) : socket_descriptor_(socket_descriptor) {}
+    Server(SocketDescriptor socket_descriptor)
+        : socket_descriptor_(socket_descriptor) {}
 
-    std::atomic<void*> socket_descriptor_ = {nullptr};
-    std::atomic<bool> is_binded_ = {false};
-    std::atomic<bool> is_listening_ = {false};
+    SocketDescriptor socket_descriptor_;
+    bool is_binded_ = false;
+    bool is_listening_ = false;
 };
 
 }  // namespace simple_http

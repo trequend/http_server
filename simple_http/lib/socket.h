@@ -6,6 +6,8 @@
 
 #include <chrono>
 
+#include "socket_descriptor.h"
+
 namespace simple_http {
 
 class Socket {
@@ -28,7 +30,8 @@ class Socket {
     };
 
     Socket() = delete;
-    Socket(void* socket_descriptor) : socket_descriptor_(socket_descriptor) {}
+    Socket(SocketDescriptor socket_descriptor)
+        : socket_descriptor_(socket_descriptor) {}
 
     ~Socket() { close(); };
 
@@ -43,7 +46,7 @@ class Socket {
     void close();
 
    private:
-    void* socket_descriptor_ = nullptr;
+    SocketDescriptor socket_descriptor_;
     bool is_closed_ = false;
 };
 

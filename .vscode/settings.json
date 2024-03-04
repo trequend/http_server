@@ -77,6 +77,16 @@
         "queue": "cpp",
         "deque": "cpp",
         "span": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "condition_variable": "cpp",
+        "*.tcc": "cpp",
+        "codecvt": "cpp",
+        "cstdarg": "cpp",
+        "cwctype": "cpp",
+        "memory_resource": "cpp",
+        "numeric": "cpp",
+        "random": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp"
     }
 }
